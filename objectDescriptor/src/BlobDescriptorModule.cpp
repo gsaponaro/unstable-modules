@@ -12,7 +12,7 @@
 bool BlobDescriptorModule::configure(ResourceFinder &rf)
 {
     // parse basic options
-    moduleName = rf.check("name", Value("blobDescriptor2"), "module name (string)").asString();
+    moduleName = rf.check("name", Value("blobDescriptor"), "module name (string)").asString();
     setName(moduleName.c_str());
 
     threadPeriod = rf.check("threadPeriod", Value(0.033),

@@ -42,7 +42,7 @@ bool BlobDescriptorThread::openPorts()
         inBinImgPortName = "/" + moduleName + "/binImg:i";
         inBinImgPort.open(inBinImgPortName.c_str());
 
-        inLabImgPortName = "/" + moduleName + "/labImg:i";
+        inLabImgPortName = "/" + moduleName + "/labeledImg:i";
         inLabImgPort.open(inLabImgPortName.c_str());
 
         // tbc
@@ -82,6 +82,7 @@ void BlobDescriptorThread::close()
         inRawImgPort.close();
         inBinImgPort.close();
         inLabImgPort.close();
+        /*
         inRoiPort.close();
 
         outRawImgPort.writeStrict();
@@ -94,6 +95,7 @@ void BlobDescriptorThread::close()
         // for debug
         outViewImgPort.close();
         outBothPartsImgPort.close();
+        */
     }
 
     mutex.post();
@@ -110,6 +112,7 @@ void BlobDescriptorThread::interrupt()
         inRawImgPort.interrupt();
         inBinImgPort.interrupt();
         inLabImgPort.interrupt();
+        /*
         inRoiPort.interrupt();
 
         outRawImgPort.interrupt();
@@ -119,6 +122,7 @@ void BlobDescriptorThread::interrupt()
         // for debug
         outViewImgPort.interrupt();
         outBothPartsImgPort.interrupt();
+        */
     }
 }
 
@@ -169,32 +173,42 @@ void BlobDescriptorThread::run()
             Mat inLab = iplToMat(*inLabImg);
             std::vector<int> uniq = unique(inLab,true); // vector of labels incl. 0 (background)
             uniq.erase( std::remove( uniq.begin(),uniq.end(),0 ), uniq.end() ); // get rid of 0
+            yDebug() << "unique labels" << uniq;
             int numObjects = uniq.size();
-            // container of "binary" masks: labelValue!=0 at object points, 0 elsewhere
-            std::vector<Mat> mask(numObjects);
+            // container of binary masks that are 1 where inLab==labelValue, 0 elsewhere
+            std::vector<Mat> binMask(numObjects);
             // container of contours: i'th object associated to vector<vector<Point> >
             std::vector< std::vector<std::vector<Point> > > cont(numObjects);
             // container of objects/blobs with shape descriptors
             std::vector<Obj2D> objs;
+            // iterate over label values
             for (std::vector<int>::iterator it=uniq.begin(); it!=uniq.end(); ++it)
             {
                 // *it is the current label value: firstLabel, secondLabel, ...
                 // intIdx is an auxiliary current index: 0, 1, ...
                 int intIdx = std::distance(uniq.begin(),it);
-                bitwise_and(*it, inLab, mask[intIdx]);
-                // mask needs to be 8uC1 or 32sC1 for findContours
-                mask[intIdx].convertTo(mask[intIdx], CV_8UC1);
-                // extract contour of current object
-                findContours(mask[intIdx], cont[intIdx], CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-                // ideally in the previous step we found 1 contour, but
-                // in general they can be many; in bad cases, select the
-                // largest-area contour
-                int largest = largestContour(cont[intIdx]);
+
+                inLab.convertTo(inLab, CV_8UC1);
+                binaryMaskFromLabel(inLab, *it, binMask[intIdx]);
+
+                // extract contour of current object - requires 8UC1 or 32SC1
+                findContours(binMask[intIdx], cont[intIdx], CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+                int largest;
+                if (cont[intIdx].size() == 1)
+                    largest = 0;
+                else
+                {
+                    yDebug("findContours returned more than one contour! selecting the largest one");
+                    largestContour(cont[intIdx], largest);
+                    yDebug() << "largest contour index" << largest << "out of" << cont[intIdx].size();
+                }
+
                 double largestArea = contourArea(cont[intIdx][largest]);
                 bool isValid = (largestArea>minArea && largestArea<maxArea);
+
                 // construct Obj2D with validity,contour,area
                 objs.push_back( Obj2D(isValid, cont[intIdx][largest], largestArea) );
-                yInfo("%d: initialized object %d with area %.1f\n", intIdx, *it, largestArea);
+                yDebug("%d: initialized object %d with area %.1f\n", intIdx, *it, largestArea);
                 // compute remaining shape descriptors
                 objs[intIdx].computeDescriptors();
             }
@@ -214,7 +228,7 @@ void BlobDescriptorThread::run()
             minMaxLoc(histH, 0, &maxVal, 0, 0);
             // tbc
         }
-        
+
         if (inRawImg!=NULL)
         {
             // propagate raw image
@@ -231,11 +245,13 @@ void BlobDescriptorThread::run()
     }
 }
 
+// helper functions
+
 /**
   * Find the unique elements of a single-channel Mat.
   * adapted by stackoverflow.com/questions/24716932
   */
-std::vector<int> unique(const Mat &input, bool sort)
+std::vector<int> unique(const Mat &input, bool shouldSort)
 {
     if (input.channels()>1 || input.type()!=CV_32S)
     {
@@ -256,7 +272,7 @@ std::vector<int> unique(const Mat &input, bool sort)
         }
     }
 
-    if (sort)
+    if (shouldSort)
         std::sort(out.begin(), out.end());
 
     return out;
@@ -272,21 +288,68 @@ Mat iplToMat(ImageOf<T> &ipl)
 }
 
 /**
+  * Given a matrix and an integer number (label), return a binary matrix with
+  * elements set to 1 where input==label, 0 elsewhere.
+  */
+bool binaryMaskFromLabel(const cv::Mat &input, const int label, cv::Mat &output)
+{
+    if (input.channels()>1 || input.type()!=CV_8U)
+    {
+        fprintf(stdout, "binaryMaskFromLabel() only works with CV_8U 1-channel Mat input");
+        return false;
+    }
+
+    output = Mat::zeros(input.size(), CV_8UC1);
+
+    int nl = input.rows;
+    int nc = input.cols * input.channels();
+
+    // see Laganière OpenCV 2 book, p. 47
+    if (input.isContinuous())
+    {
+        nc = nc * nl;
+        nl = 1;
+    }
+
+    // cycle over all pixels - executed only once in case of continuous images
+    for (int j=0; j<nl; j++)
+    {
+        // pointer to first column of line j
+        uchar* data = const_cast<uchar*>( input.ptr<uchar>(j) );
+        for (int i=0; i<nc; i++)
+            output.at<uchar>(j,i) = ( (uint8_t)*data++ == (uint8_t)label ? 1 : 0); 
+    }
+
+    return true;
+
+}
+
+/**
   * Given a vector of OpenCV contours, return the index of the one with the
   * largest area.
   */
-int largestContour(std::vector< std::vector<Point> > cnt)
+bool largestContour(std::vector< std::vector<Point> > cnt, int largestIdx)
 {
     double largestArea = 0.0;
-    int largestIdx = 0;
+    int currLargestIdx = -1;
     
     for (int c=0; c<cnt.size(); ++c)
     {
-        double currArea = contourArea(cnt[c], false);
+        // default paramenter oriented=false is ok
+        double currArea = contourArea(cnt[c]);
         if (currArea > largestArea)
         {
             largestArea = currArea;
-            largestIdx = c;
+            currLargestIdx = c;
         }
     }
+
+    if (currLargestIdx == -1)
+    {
+        yWarning("largestContour did not find index of largest contour");
+        return false;
+    }
+
+    largestIdx = currLargestIdx;
+    return true;
 }

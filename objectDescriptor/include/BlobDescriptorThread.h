@@ -14,6 +14,7 @@
 #include <vector>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <yarp/os/BufferedPort.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
@@ -84,11 +85,13 @@ class BlobDescriptorThread : public RateThread
 
 // helper functions
 
-std::vector<int> unique(const Mat &input, bool sort=false);
+std::vector<int> unique(const Mat &input, bool shouldSort=false);
 
 template <class T>
 Mat iplToMat(ImageOf<T> &ipl);
 
-int largestContour(std::vector< std::vector<Point> > cnt);
+bool binaryMaskFromLabel(const cv::Mat &input, const int label, cv::Mat &output);
+
+bool largestContour(std::vector< std::vector<Point> > cnt, int largestIdx);
 
 #endif
