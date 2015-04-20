@@ -1,24 +1,22 @@
 /*
  * Copyright: (C) 2012-2015 POETICON++, European Commission FP7 project ICT-288382
- * Copyright: (C) 2014 VisLab, Institute for Systems and Robotics,
+ * Copyright: (C) 2015 VisLab, Institute for Systems and Robotics,
  *                Istituto Superior Técnico, Universidade de Lisboa, Lisbon, Portugal
  * Author: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
  *
  */
 
-#ifndef	BLOB_DESC_THREAD_H
-#define BLOB_DESC_THREAD_H
+#ifndef DESC_THREAD_H
+#define DESC_THREAD_H
 
-#include <algorithm>
-#include <vector>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/sig/Image.h>
+
+#include "Helpers.h"
 
 using namespace cv;
 using namespace yarp::os;
@@ -82,16 +80,5 @@ class BlobDescriptorThread : public RateThread
         bool threadInit();
         void run();
 };
-
-// helper functions
-
-std::vector<int> unique(const Mat &input, bool shouldSort=false);
-
-template <class T>
-Mat iplToMat(ImageOf<T> &ipl);
-
-bool binaryMaskFromLabel(const cv::Mat &input, const int label, cv::Mat &output);
-
-bool largestContour(std::vector< std::vector<Point> > cnt, int largestIdx);
 
 #endif

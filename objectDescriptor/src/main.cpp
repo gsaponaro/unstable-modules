@@ -1,6 +1,6 @@
 /*
  * Copyright: (C) 2012-2015 POETICON++, European Commission FP7 project ICT-288382
- * Copyright: (C) 2014 VisLab, Institute for Systems and Robotics,
+ * Copyright: (C) 2015 VisLab, Institute for Systems and Robotics,
  *                Istituto Superior Técnico, Universidade de Lisboa, Lisbon, Portugal
  * Author: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
@@ -9,7 +9,8 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Network.h>
-#include "BlobDescriptorModule.h"
+
+#include "DescriptorModule.h"
 
 int main(int argc, char *argv[])
 {
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     if(rf.check("help"))
     {
         yInfo("Basic options:");
-        yInfo("--name <module name> (default: blobDescriptor2)");
+        yInfo("--name <module name> (default: objectDescriptor)");
         yInfo("--threadPeriod <thread period in seconds> (default: 0.033)");
         yInfo("--maxObjects <number> (default: 10)");
         yInfo("--mode <2d or 3d> (default: 2d)");
