@@ -175,7 +175,7 @@ void BlobDescriptorThread::run()
             Mat inLab = iplToMat(*inLabImg);
             std::vector<int> uniq = unique(inLab,true); // vector of labels incl. 0 (background)
             uniq.erase( std::remove( uniq.begin(),uniq.end(),0 ), uniq.end() ); // get rid of 0
-            yDebug() << "unique labels" << uniq;
+            //yDebug() << "unique labels" << uniq;
             int numObjects = uniq.size();
             // container of binary masks that are 1 where inLab==labelValue, 0 elsewhere
             std::vector<Mat> binMask(numObjects);
@@ -210,7 +210,6 @@ void BlobDescriptorThread::run()
 
                 // construct Obj2D with validity,contour,area
                 objs.push_back( Obj2D(isValid, cont[intIdx][largest], largestArea) );
-                yDebug("%d: initialized object %d with area %.1f\n", intIdx, *it, largestArea);
                 // compute remaining shape descriptors
                 objs[intIdx].computeDescriptors();
             }
