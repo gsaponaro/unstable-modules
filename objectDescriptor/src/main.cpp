@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("objectDescriptor");    // overridden by --context
-    rf.setDefaultConfigFile("objectDescriptor.ini");  // overridden by --from
+    rf.setDefaultContext("blobDescriptor2");    // overridden by --context
+    rf.setDefaultConfigFile("blobDescriptor2.ini");  // overridden by --from
     rf.configure(argc, argv);
 
     #ifdef CV_MAJOR_VERSION

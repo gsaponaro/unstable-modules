@@ -5,7 +5,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 cmake_minimum_required(VERSION 2.6)
-set(PROJECTNAME objectDescriptor)
+set(PROJECTNAME blobDescriptor2)
 project(${PROJECTNAME})
 
 find_package(YARP)
