@@ -83,33 +83,54 @@ Obj2D::Obj2D(bool _isValid, std::vector<cv::Point> _contour, double _area)
   */
 void Obj2D::computeDescriptors()
 {
+    perimeter = arcLength(contour, true);
     convexHull(contour, hull);
     double hull_perimeter = arcLength(hull, true);
-    approxPolyDP(contour, poly, arcLength(contour,true)*0.02, true);
-    perimeter = arcLength(poly, true);
-    convexity = (perimeter>0 ? hull_perimeter/perimeter : 0);
+    double convexity_temp = (perimeter>0 ? hull_perimeter/perimeter : 0);
+    const int conv_exponent = 2;
+    double convexity = (perimeter>0 ? pow(convexity_temp,conv_exponent) : 0);
+    //yDebug("hull_perimeter=%.2f perimeter=%.2f \t convexity=%.2f convexity^2=%.2f",
+    //       hull_perimeter, perimeter, convexity_temp, convexity);
 
-    enclosingRect = minAreaRect(contour);
-    double major_axis, minor_axis; // TODO: should come from ellipse
-    major_axis = (enclosingRect.size.width>enclosingRect.size.height ?
-                  enclosingRect.size.width :
-                  enclosingRect.size.height);
-    minor_axis = (enclosingRect.size.width>enclosingRect.size.height ?
-                  enclosingRect.size.height :
-                  enclosingRect.size.width);
-    eccentricity = (major_axis>0 ? minor_axis/major_axis : 0);
+    double majorAxisEll, minorAxisEll;
+    RotatedRect enclosingRectEll = fitEllipse(contour);
+    majorAxisEll = (enclosingRectEll.size.width>enclosingRectEll.size.height ?
+                    enclosingRectEll.size.width :
+                    enclosingRectEll.size.height);
+    minorAxisEll = (enclosingRectEll.size.width>enclosingRectEll.size.height ?
+                    enclosingRectEll.size.height :
+                    enclosingRectEll.size.width);
+    eccentricity = (majorAxisEll>0 ? minorAxisEll/majorAxisEll : 0);
+    //yDebug("minorAxisEll=%.2f majorAxisEll=%.2f \t eccentricity=%.2f",
+    //       minorAxisEll, majorAxisEll, eccentricity);
 
-    compactness = (perimeter>0 ? area/(perimeter*perimeter) : 0);
+    compactness = (perimeter>0 ? (4*CV_PI*area)/pow(perimeter,2) : 0);
+    if (compactness > 1.0)
+    {
+        yWarning("compactness was >1.0 -> set to 1.0. check computation of this descriptor!");
+        compactness = 1.0;
+    }
+    //yDebug("4*pi*area=%.2f per^2=%.2f \t compactness=%.2f",
+    //       4*CV_PI*area, pow(perimeter,2), compactness);
 
     minEnclosingCircle(contour, circleCenter, circleRadius);
-    const double PI = 3.141592653589793;
-    circleness = (circleRadius>0 ? area/(PI*circleRadius*circleRadius) : 0);
+    circleness = (circleRadius>0 ? area/(CV_PI*pow(circleRadius,2)) : 0);
+    //yDebug("area=%.2f pi*radius^2=%.2f \t circleness=%.2f",
+    //       area, CV_PI*pow(circleRadius,2), circleness);
 
-    double enclosingRectArea = major_axis * minor_axis;
+    enclosingRect = minAreaRect(contour);
+    double majorAxisRect, minorAxisRect;
+    majorAxisRect = (enclosingRect.size.width>enclosingRect.size.height ?
+                     enclosingRect.size.width :
+                     enclosingRect.size.height);
+    minorAxisRect = (enclosingRect.size.width>enclosingRect.size.height ?
+                     enclosingRect.size.height :
+                     enclosingRect.size.width);
+    double enclosingRectArea = majorAxisRect * minorAxisRect;
     squareness = (enclosingRectArea>0 ? area/enclosingRectArea : 0);
+    //yDebug("area=%.2f enclosingRectArea=%.2f \t squareness=%.2f",
+    //       area, enclosingRectArea, squareness);
 
-    yDebug("area=%f "
-           "convexity=%.2f eccentricity=%.2f compactness=%.2f "
-           "circleness=%.2f squareness=%.2f",
-           area, convexity, eccentricity, compactness, circleness, squareness);
+    yDebug("perimeter=%.2f area=%.2f convexity=%.2f eccentricity=%.2f compactness=%.2f circleness=%.2f squareness=%.2f",
+           perimeter, area, convexity, eccentricity, compactness, circleness, squareness);
 }

@@ -34,8 +34,8 @@ bool BlobDescriptorModule::configure(ResourceFinder &rf)
         "maximum valid blob area (int)").asInt();
 
     // parse advanced options (3d mode)
-    
-    
+    // tbc
+
     // end of options parsing
 
     closing = false;

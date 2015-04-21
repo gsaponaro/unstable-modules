@@ -183,6 +183,7 @@ void BlobDescriptorThread::run()
             std::vector< std::vector<std::vector<Point> > > cont(numObjects);
             // container of objects/blobs with shape descriptors
             std::vector<Obj2D> objs;
+            yDebug("");
             // iterate over label values
             for (std::vector<int>::iterator it=uniq.begin(); it!=uniq.end(); ++it)
             {
