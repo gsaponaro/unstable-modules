@@ -10,57 +10,6 @@
 #include "Obj2D.h"
 
 /**
-  * Constructor.
-  */
-Obj2D::Obj2D()
-: valid(true),
-  contour(std::vector<cv::Point>()),
-  area(1.0), convexity(0.0), eccentricity(0.0), compactness(0.0),
-  circleness(0.0), squareness(0.0),
-  perimeter(0.0), elongation(0.0),
-  moments(cv::Moments()),
-  boundingRect(cv::Rect()), enclosingRect(cv::RotatedRect()),
-  circleCenter(cv::Point2f()), circleRadius(0.0),
-  poly(std::vector<cv::Point>()), hull(std::vector<cv::Point>()),
-  defects(std::vector<cv::Vec4i>())
-{
-}
-
-/**
-  * Constructor specifying contour.
-  */
-Obj2D::Obj2D(std::vector<cv::Point> _contour)
-: valid(true),
-  contour(_contour),
-  area(1.0), convexity(0.0), eccentricity(0.0), compactness(0.0),
-  circleness(0.0), squareness(0.0),
-  perimeter(0.0), elongation(0.0),
-  moments(cv::Moments()),
-  boundingRect(cv::Rect()), enclosingRect(cv::RotatedRect()),
-  circleCenter(cv::Point2f()), circleRadius(0.0),
-  poly(std::vector<cv::Point>()), hull(std::vector<cv::Point>()),
-  defects(std::vector<cv::Vec4i>())
-{
-}
-
-/**
-  * Constructor specifying contour and area.
-  */
-Obj2D::Obj2D(std::vector<cv::Point> _contour, double _area)
-: valid(true),
-  contour(_contour),
-  area(_area), convexity(0.0), eccentricity(0.0), compactness(0.0),
-  circleness(0.0), squareness(0.0),
-  perimeter(0.0), elongation(0.0),
-  moments(cv::Moments()),
-  boundingRect(cv::Rect()), enclosingRect(cv::RotatedRect()),
-  circleCenter(cv::Point2f()), circleRadius(0.0),
-  poly(std::vector<cv::Point>()), hull(std::vector<cv::Point>()),
-  defects(std::vector<cv::Vec4i>())
-{
-}
-
-/**
   * Constructor specifying validity, contour and area.
   */
 Obj2D::Obj2D(bool _isValid, std::vector<cv::Point> _contour, double _area)

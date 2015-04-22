@@ -59,11 +59,7 @@ private:
     std::vector<Vec4i> defects;
 
 public:
-    Obj2D();
-    Obj2D(std::vector<Point> _contour);
-    Obj2D(std::vector<Point> _contour, double _area);
     Obj2D(bool _isValid, std::vector<Point> _contour, double _area);
-
     void computeDescriptors();
 };
 
