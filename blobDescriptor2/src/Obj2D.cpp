@@ -83,3 +83,77 @@ void Obj2D::computeDescriptors()
     yDebug("perimeter=%.2f area=%.2f convexity=%.2f eccentricity=%.2f compactness=%.2f circleness=%.2f squareness=%.2f",
            perimeter, area, convexity, eccentricity, compactness, circleness, squareness);
 }
+
+// accessors
+
+/**
+  * Return whether the object is valid.
+  */
+bool Obj2D::isValid()
+{
+    return valid;
+}
+
+/**
+  * Return enclosing rectangle (rotated rectangle containing best-fit ellipse).
+  */
+RotatedRect Obj2D::getEnclosingRect()
+{
+    return enclosingRect;
+}
+
+/**
+  * Return bounding rectangle (up-right bounding box in image).
+  */
+Rect Obj2D::getBoundingRect()
+{
+    return cv::boundingRect(contour);
+}
+
+/**
+  * Return object area.
+  */
+double Obj2D::getArea()
+{
+    return area;
+}
+
+/**
+  * Return object convexity.
+  */
+double Obj2D::getConvexity()
+{
+    return convexity;
+}
+
+/**
+  * Return object eccentricity.
+  */
+double Obj2D::getEccentricity()
+{
+    return eccentricity;
+}
+
+/**
+  * Return object compactness.
+  */
+double Obj2D::getCompactness()
+{
+    return compactness;
+}
+
+/**
+  * Return object circleness.
+  */
+double Obj2D::getCircleness()
+{
+    return circleness;
+}
+
+/**
+  * Return object squareness.
+  */
+double Obj2D::getSquareness()
+{
+    return squareness;
+}

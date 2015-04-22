@@ -20,13 +20,6 @@ BlobDescriptorThread::BlobDescriptorThread(const string &_moduleName,
       mode(_mode),
       minArea(_minArea), maxArea(_maxArea)
 {
-    /*
-    fprintf(stdout, "%s: constructed thread with variables ", moduleName.c_str());
-    fprintf(stdout, "maxObjects=%d ", maxObjects);
-    fprintf(stdout, "mode=%s ", mode.c_str());
-    fprintf(stdout, "minArea=%d maxArea=%d", minArea, maxArea);
-    fprintf(stdout, "\n");
-    */
     yInfo("constructed thread with variables "
           "maxObjects=%d mode=%s minArea=%d maxArea=%d",
           maxObjects, mode.c_str(), minArea, maxArea
@@ -183,6 +176,8 @@ void BlobDescriptorThread::run()
             std::vector< std::vector<std::vector<Point> > > cont(numObjects);
             // container of objects/blobs with shape descriptors
             std::vector<Obj2D> objs;
+            // count number of valid objects
+            int valid_objs = 0;
             yDebug("");
             // iterate over label values
             for (std::vector<int>::iterator it=uniq.begin(); it!=uniq.end(); ++it)
@@ -208,27 +203,63 @@ void BlobDescriptorThread::run()
 
                 double largestArea = contourArea(cont[intIdx][largest]);
                 bool isValid = (largestArea>minArea && largestArea<maxArea);
+                if (isValid)
+                    ++valid_objs;
 
                 // construct Obj2D with validity,contour,area
                 objs.push_back( Obj2D(isValid, cont[intIdx][largest], largestArea) );
                 // compute remaining shape descriptors
                 objs[intIdx].computeDescriptors();
+                // compute colour histogram - tbc
+                /*
+                Mat inRaw = iplToMat(*inRawImg);
+                Mat inHSV;
+                cvtColor(inRaw, inHSV, COLOR_BGR2HSV);
+                int h_bins = 32;
+                int histSize[] = { h_bins };
+                float h_ranges[] = { 0, 180 }; // in 8-bit images, hue varies from 0 to 179
+                const float *ranges[] = { h_ranges };
+                int channels[] = { 0 };
+                MatND histH;
+                calcHist(&inHSV, 1, channels, Mat(), histH, 1, histSize, ranges);
+                double maxVal = 0;
+                minMaxLoc(histH, 0, &maxVal, 0, 0);
+                */
             }
 
-            // compute hue histogram
-            Mat inRaw = iplToMat(*inRawImg);
-            Mat inHSV;
-            cvtColor(inRaw, inHSV, COLOR_BGR2HSV);
-            int h_bins = 32;
-            int histSize[] = { h_bins };
-            float h_ranges[] = { 0, 180 }; // in 8-bit images, hue varies from 0 to 179
-            const float *ranges[] = { h_ranges };
-            int channels[] = { 0 };
-            MatND histH;
-            calcHist(&inHSV, 1, channels, Mat(), histH, 1, histSize, ranges);
-            double maxVal = 0;
-            minMaxLoc(histH, 0, &maxVal, 0, 0);
-            // tbc
+            // output shape descriptors of whole blobs
+            Bottle &bDesc = outAffPort.prepare();
+            bDesc.clear();
+            bDesc.addInt(valid_objs);
+            for (std::vector<Obj2D>::iterator it=objs.begin(); it!=objs.end(); ++it)
+            {
+                if (it->isValid())
+                {
+                    Bottle &bObj = bDesc.addList();
+                    bObj.clear();
+                    RotatedRect er = it->getEnclosingRect();
+                    /*0*/bObj.addDouble(er.center.x);
+                    /*1*/bObj.addDouble(er.center.y);
+                    /*2*/bObj.addDouble(er.size.width);
+                    /*3*/bObj.addDouble(er.size.height);
+                    /*4*/bObj.addDouble(er.angle);
+                    Rect br = it->getBoundingRect();
+                    // estimate of point over the table
+                    /*5*/bObj.addDouble(br.x + br.width/2.);
+                    /*6*/bObj.addDouble(br.y + br.height);
+                    // tbc colour histograms
+
+                    // shape descriptors
+                    bObj.addDouble(it->getArea());
+                    bObj.addDouble(it->getConvexity());
+                    bObj.addDouble(it->getEccentricity());
+                    bObj.addDouble(it->getCompactness());
+                    bObj.addDouble(it->getCircleness());
+                    bObj.addDouble(it->getSquareness());
+                }
+            }
+            outAffPort.setEnvelope(tsRaw);
+            outAffPort.write();
         }
 
         if (inRawImg!=NULL)
@@ -243,6 +274,6 @@ void BlobDescriptorThread::run()
 
     while( !closing && mode=="3d" )
     {
-
+        // tbc
     }
 }

@@ -25,10 +25,9 @@ private:
     bool valid;
 
     std::vector<Point> contour;
+    double area;
 
     // shape descriptors
-
-    double area;
     double convexity;
     double eccentricity;
     double compactness;
@@ -61,6 +60,17 @@ private:
 public:
     Obj2D(bool _isValid, std::vector<Point> _contour, double _area);
     void computeDescriptors();
+
+    // accessors
+    bool isValid();
+    RotatedRect getEnclosingRect();
+    Rect getBoundingRect();
+    double getArea();
+    double getConvexity();
+    double getEccentricity();
+    double getCompactness();
+    double getCircleness();
+    double getSquareness();
 };
 
 #endif
