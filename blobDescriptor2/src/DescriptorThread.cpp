@@ -211,20 +211,7 @@ void BlobDescriptorThread::run()
                 // compute remaining shape descriptors
                 objs[intIdx].computeDescriptors();
                 // compute colour histogram - tbc
-                /*
-                Mat inRaw = iplToMat(*inRawImg);
-                Mat inHSV;
-                cvtColor(inRaw, inHSV, COLOR_BGR2HSV);
-                int h_bins = 32;
-                int histSize[] = { h_bins };
-                float h_ranges[] = { 0, 180 }; // in 8-bit images, hue varies from 0 to 179
-                const float *ranges[] = { h_ranges };
-                int channels[] = { 0 };
-                MatND histH;
-                calcHist(&inHSV, 1, channels, Mat(), histH, 1, histSize, ranges);
-                double maxVal = 0;
-                minMaxLoc(histH, 0, &maxVal, 0, 0);
-                */
+                objs[intIdx].computeHueHistogram();
             }
 
             // output shape descriptors of whole blobs

@@ -30,7 +30,7 @@ Obj2D::Obj2D(bool _isValid, std::vector<cv::Point> _contour, double _area)
   * Given an existing object with validity,contour,area already set,
   * compute the remaining descriptors.
   */
-void Obj2D::computeDescriptors()
+bool Obj2D::computeDescriptors()
 {
     perimeter = arcLength(contour, true);
     convexHull(contour, hull);
@@ -82,6 +82,38 @@ void Obj2D::computeDescriptors()
 
     yDebug("perimeter=%.2f area=%.2f convexity=%.2f eccentricity=%.2f compactness=%.2f circleness=%.2f squareness=%.2f",
            perimeter, area, convexity, eccentricity, compactness, circleness, squareness);
+
+    return true;
+}
+
+/**
+  * Given an existing object compute the hue colour histogram.
+  */
+bool Obj2D::computeHueHistogram()
+{
+    // TODO: compute ROI from contour points
+    Mat inRaw = Mat( contour );
+    Mat inHSV;
+    cvtColor(inRaw, inHSV, COLOR_BGR2HSV);
+    int h_bins = 32;
+    int histSize[] = { h_bins };
+    float h_ranges[] = { 0, 180 }; // in 8-bit images, hue varies from 0 to 179
+    const float *ranges[] = { h_ranges };
+    int channels[] = { 0 };
+
+    cv::calcHist(&inHSV,   // input
+                 1,        // histogram from 1 image only
+                 channels, // channel used
+                 Mat(),    // no mask is used
+                 histH,    // output histogram
+                 1,        // it is a 1D histogram
+                 histSize, // number of bins
+                 ranges);  // pixel value range
+
+    //double maxVal = 0;
+    //minMaxLoc(histH, 0, &maxVal, 0, 0);
+
+    return true;
 }
 
 // accessors

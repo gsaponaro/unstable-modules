@@ -57,9 +57,13 @@ private:
     // convexity defects
     std::vector<Vec4i> defects;
 
+    // hue colour histogram
+    MatND histH;
+
 public:
     Obj2D(bool _isValid, std::vector<Point> _contour, double _area);
-    void computeDescriptors();
+    bool computeDescriptors();
+    bool computeHueHistogram();
 
     // accessors
     bool isValid();
