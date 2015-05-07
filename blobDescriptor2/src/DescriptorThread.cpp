@@ -211,7 +211,11 @@ void BlobDescriptorThread::run()
                 // compute remaining shape descriptors
                 objs[intIdx].computeDescriptors();
                 // compute colour histogram - tbc
-                objs[intIdx].computeHueHistogram();
+                Mat inRaw = iplToMat(*inRawImg);
+                objs[intIdx].setMask( inRaw(objs[intIdx].getBoundingRect()) );
+                if (!objs[intIdx].computeHueHistogram())
+                    yWarning("error computing hue histogram");
+                //for (int i=0; i<16; i++) yDebug() << "value" << i << "=" << objs[intIdx].getHueHistogram().at<float>(i);
             }
 
             // output shape descriptors of whole blobs
@@ -234,7 +238,10 @@ void BlobDescriptorThread::run()
                     // estimate of point over the table
                     /*5*/bObj.addDouble(br.x + br.width/2.);
                     /*6*/bObj.addDouble(br.y + br.height);
-                    // tbc colour histograms
+                    // colour histograms
+                    MatND hueHist = it->getHueHistogram();
+                    for (int i=0; i<16; i++)
+                        bObj.addDouble( hueHist.at<float>(i) );
 
                     // shape descriptors
                     bObj.addDouble(it->getArea());

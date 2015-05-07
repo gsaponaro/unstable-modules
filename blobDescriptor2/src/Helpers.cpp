@@ -57,7 +57,7 @@ bool binaryMaskFromLabel(const cv::Mat &input, const int label, cv::Mat &output)
     int nl = input.rows;
     int nc = input.cols * input.channels();
 
-    // see Laganière OpenCV 2 book, p. 47
+    // from Laganière OpenCV 2 book
     if (input.isContinuous())
     {
         nc = nc * nl;

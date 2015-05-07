@@ -37,7 +37,7 @@ bool Obj2D::computeDescriptors()
     double hull_perimeter = arcLength(hull, true);
     double convexity_temp = (perimeter>0 ? hull_perimeter/perimeter : 0);
     const int conv_exponent = 2;
-    double convexity = (perimeter>0 ? pow(convexity_temp,conv_exponent) : 0);
+    convexity = (perimeter>0 ? pow(convexity_temp,conv_exponent) : 0);
     //yDebug("hull_perimeter=%.2f perimeter=%.2f \t convexity=%.2f convexity^2=%.2f",
     //       hull_perimeter, perimeter, convexity_temp, convexity);
 
@@ -91,11 +91,9 @@ bool Obj2D::computeDescriptors()
   */
 bool Obj2D::computeHueHistogram()
 {
-    // TODO: compute ROI from contour points
-    Mat inRaw = Mat( contour );
     Mat inHSV;
-    cvtColor(inRaw, inHSV, COLOR_BGR2HSV);
-    int h_bins = 32;
+    cvtColor(mask, inHSV, COLOR_BGR2HSV);
+    int h_bins = 16;
     int histSize[] = { h_bins };
     float h_ranges[] = { 0, 180 }; // in 8-bit images, hue varies from 0 to 179
     const float *ranges[] = { h_ranges };
@@ -110,18 +108,17 @@ bool Obj2D::computeHueHistogram()
                  histSize, // number of bins
                  ranges);  // pixel value range
 
-    //double maxVal = 0;
-    //minMaxLoc(histH, 0, &maxVal, 0, 0);
+    cv::normalize(histH, histH);
 
     return true;
 }
 
-// accessors
+// getters
 
 /**
   * Return whether the object is valid.
   */
-bool Obj2D::isValid()
+bool Obj2D::isValid() const
 {
     return valid;
 }
@@ -129,7 +126,7 @@ bool Obj2D::isValid()
 /**
   * Return enclosing rectangle (rotated rectangle containing best-fit ellipse).
   */
-RotatedRect Obj2D::getEnclosingRect()
+RotatedRect Obj2D::getEnclosingRect() const
 {
     return enclosingRect;
 }
@@ -137,7 +134,7 @@ RotatedRect Obj2D::getEnclosingRect()
 /**
   * Return bounding rectangle (up-right bounding box in image).
   */
-Rect Obj2D::getBoundingRect()
+Rect Obj2D::getBoundingRect() const
 {
     return cv::boundingRect(contour);
 }
@@ -145,7 +142,7 @@ Rect Obj2D::getBoundingRect()
 /**
   * Return object area.
   */
-double Obj2D::getArea()
+double Obj2D::getArea() const
 {
     return area;
 }
@@ -153,7 +150,7 @@ double Obj2D::getArea()
 /**
   * Return object convexity.
   */
-double Obj2D::getConvexity()
+double Obj2D::getConvexity() const
 {
     return convexity;
 }
@@ -161,7 +158,7 @@ double Obj2D::getConvexity()
 /**
   * Return object eccentricity.
   */
-double Obj2D::getEccentricity()
+double Obj2D::getEccentricity() const
 {
     return eccentricity;
 }
@@ -169,7 +166,7 @@ double Obj2D::getEccentricity()
 /**
   * Return object compactness.
   */
-double Obj2D::getCompactness()
+double Obj2D::getCompactness() const
 {
     return compactness;
 }
@@ -177,7 +174,7 @@ double Obj2D::getCompactness()
 /**
   * Return object circleness.
   */
-double Obj2D::getCircleness()
+double Obj2D::getCircleness() const
 {
     return circleness;
 }
@@ -185,7 +182,29 @@ double Obj2D::getCircleness()
 /**
   * Return object squareness.
   */
-double Obj2D::getSquareness()
+double Obj2D::getSquareness() const
 {
     return squareness;
+}
+
+/**
+  * Return image mask: nonzero on object pixels, zero elsewhere.
+  */
+Mat Obj2D::getMask() const
+{
+    return mask;
+}
+
+/**
+  * Return hue histogram of object.
+  */
+MatND Obj2D::getHueHistogram() const
+{
+    return histH;
+}
+
+// setters
+bool Obj2D::setMask(const Mat& m)
+{
+    mask = m;
 }

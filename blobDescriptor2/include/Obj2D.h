@@ -59,22 +59,28 @@ private:
 
     // hue colour histogram
     MatND histH;
+    Mat mask;
 
 public:
     Obj2D(bool _isValid, std::vector<Point> _contour, double _area);
     bool computeDescriptors();
     bool computeHueHistogram();
 
-    // accessors
-    bool isValid();
-    RotatedRect getEnclosingRect();
-    Rect getBoundingRect();
-    double getArea();
-    double getConvexity();
-    double getEccentricity();
-    double getCompactness();
-    double getCircleness();
-    double getSquareness();
+    // getters
+    bool isValid() const;
+    RotatedRect getEnclosingRect() const;
+    Rect getBoundingRect() const;
+    double getArea() const;
+    double getConvexity() const;
+    double getEccentricity() const;
+    double getCompactness() const;
+    double getCircleness() const;
+    double getSquareness() const;
+    Mat getMask() const;
+    MatND getHueHistogram() const;
+
+    // setters
+    bool setMask(const Mat& m);
 };
 
 #endif
