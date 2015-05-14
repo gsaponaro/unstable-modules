@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <vector>
+
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <yarp/os/LogStream.h>

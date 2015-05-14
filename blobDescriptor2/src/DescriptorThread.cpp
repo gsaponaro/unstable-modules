@@ -164,22 +164,25 @@ void BlobDescriptorThread::run()
             }
 
             // initialize object instances using labelled image
-            // (alternative: use bounding boxes ROIs from blobSpotter)
+            // (alternative: use bounding boxes ROIs from segmentation)
             Mat inLab = iplToMat(*inLabImg);
-            std::vector<int> uniq = unique(inLab,true); // vector of labels incl. 0 (background)
-            uniq.erase( std::remove( uniq.begin(),uniq.end(),0 ), uniq.end() ); // get rid of 0
-            //yDebug() << "unique labels" << uniq;
+
+            // unique labels excluding 0 (background)
+            std::vector<int> uniq = unique(inLab,true);
+            uniq.erase( std::remove( uniq.begin(),uniq.end(),0 ), uniq.end() );
             int numObjects = uniq.size();
+
             // container of binary masks that are 1 where inLab==labelValue, 0 elsewhere
             std::vector<Mat> binMask(numObjects);
+
             // container of contours: i'th object associated to vector<vector<Point> >
             std::vector< std::vector<std::vector<Point> > > cont(numObjects);
-            // container of objects/blobs with shape descriptors
+
+            // container of objects/blobs with associated features
             std::vector<Obj2D> objs;
-            // count number of valid objects
+
             int valid_objs = 0;
             yDebug("");
-            // iterate over label values
             for (std::vector<int>::iterator it=uniq.begin(); it!=uniq.end(); ++it)
             {
                 // *it is the current label value: firstLabel, secondLabel, ...
@@ -208,9 +211,8 @@ void BlobDescriptorThread::run()
 
                 // construct Obj2D with validity,contour,area
                 objs.push_back( Obj2D(isValid, cont[intIdx][largest], largestArea) );
-                // compute remaining shape descriptors
+                // compute remaining shape descriptors and colour histogram
                 objs[intIdx].computeDescriptors();
-                // compute colour histogram - tbc
                 Mat inRaw = iplToMat(*inRawImg);
                 objs[intIdx].setMask( inRaw(objs[intIdx].getBoundingRect()) );
                 if (!objs[intIdx].computeHueHistogram())
