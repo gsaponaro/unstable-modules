@@ -19,14 +19,12 @@
 #include <boost/format.hpp>
 #include <boost/thread/thread.hpp>
 
-//cv::Mat heat_prob;
-
 cv::Mat depth_map;
 
 namespace gesture_tester
 {
     // Tool name
-    static const std::string TOOL_NAME   = "Gestoos Detector Demo";
+    static const std::string TOOL_NAME   = "WHAI Hand Tracker + Gestoos Detector";
     // Tool brief
     static const std::string BRIEF       = "Run the core detector behind Gestoos on live depth streams\n";
     // Tool description
@@ -59,14 +57,9 @@ public:
     TestConfig(int argc, char* argv[]) :
         gestoos::ToolConfig(TOOL_NAME, BRIEF, DESCRIPTION)
     {
+        ini_file = "./config/gestures320.ini";
 
-        ini_file ="./config/gestures320.ini";
-
-        #ifdef MSVC
-            ini_file ="./config/gesturesWin.ini";
-        #endif
-
-        score=0;
+        score = 0;
 
         //add options
         add_option(ini_file, "ini_file", "Configuration file with gestures and thresholds");
@@ -81,28 +74,20 @@ public:
     }
 };
 
+void dumpDetectorLabels(std::vector<int> labels)
+{
+    std::cout << "gesture detector labels: ";
+    for (std::vector<int>::const_iterator i = labels.begin();
+         i != labels.end();
+         ++i)
+    {
+        std::cout << *i << ' ';
+    }
+    std::cout << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
-    /*
-    //Test on a live device
-    gestoos::detection::GestureDetector detector;
-    int frame_count = 0;
-
-    TestConfig cfg(argc, argv);
-
-    detector.init_camera(gestoos::CaptureRGBD::QVGA_30FPS); // 320x240
-    if (!detector.is_connected_to_camera())
-    {
-        //std::cout << "ERROR:  RGBD sensor not found" << std::endl;
-        exit(-1);
-    }
-    detector.init_detector(cfg.ini_file, ".");
-    detector.use_motion_detection(true);
-    */
-
-    gestoos::detection::GestureDetector detector;
-    TestConfig cfg(argc, argv);
-
     //Configure camera
     gestoos::CaptureRGBD capture;
     capture.init("", // oni_file
@@ -110,9 +95,16 @@ int main(int argc, char* argv[])
                  gestoos::CaptureRGBD::QVGA_30FPS);
 
     // initialize gesture detector
+    gestoos::detection::GestureDetector detector;
+    TestConfig cfg(argc, argv);
     detector.set_video_mode(gestoos::CaptureRGBD::QVGA_30FPS);
-    detector.init_detector("./config/handGestures.ini", "."); 
+    detector.init_detector("./config/handGestures.ini", // ini_file
+                           ".");                        // bundle_path
     detector.use_motion_detection(false);
+
+    std::vector<int> labels;
+    labels = detector.get_labels();
+    dumpDetectorLabels(labels);
 
     //Declare WHAITracker
     gestoos::tracking::WHAITracker whai;
@@ -120,19 +112,6 @@ int main(int argc, char* argv[])
     gestoos::tracking::ObjectTrack::ts_type frame = 0;
     //Configure the tracker
     whai.init("./config/whai.ini");
-
-
-    /*
-    double minDepth;
-    double maxDepth;
-    double draw_scale = 2.0;
-    #ifndef AVOID_QT
-        if (cfg.score) {
-            cv::namedWindow("Detection map");
-            cv::moveWindow("Detection map", 320*draw_scale, 240*draw_scale);
-        }
-    #endif
-    */
 
     while(1) // processing loop
     {
@@ -170,9 +149,6 @@ int main(int argc, char* argv[])
             mask(gestoos::crop_to_image(roi, mask)) = cv::Scalar(255);
         }
 
-        // not necessary?
-        //depth_map.convertTo(depth_map, CV_16UC1);
-
         /*
          * Still gesture detector
          */
@@ -182,53 +158,18 @@ int main(int argc, char* argv[])
 
         ++frame;
 
+        // visualize score map(s) of detector
+        cv::Mat sm0 = detector.get_probability_map(0);
+        cv::Mat colored0;
+        gestoos::score_heat_map(sm0, colored0, 1, 10);
 
+        cv::Mat sm1 = detector.get_probability_map(1);
+        cv::Mat colored1;
+        gestoos::score_heat_map(sm1, colored1, 1, 10);
 
-        /*
-        // overlay tracking results on the depth map
-        cv::Mat color_img;
-        // Normalizing depth data values
-        depth_map.convertTo(color_img, CV_8UC1, 1/15.0);
-        // Converting from Grayscale to RGB
-        cv::cvtColor(color_img, color_img, CV_GRAY2BGR);
-        //Set to false to hide trajectory
-        bool show_trajectory = true;
-        //Comment to hide hand position and trajectory
-        whai.visualize(color_img, 3, show_trajectory);
-        //Comment to hide hand labels
-        whai.show_labels(color_img, 3);
-        */
-
-
-
-        /*
-        detector.min_max_depth(minDepth, maxDepth);
-        if (minDepth < 600 )
-        {
-            std::cout << "YOU (OR SOMETHING) ARE TOO CLOSE! " << minDepth << std::endl;
-        }
-        */
-
-        /*
-        //Show score map
-        #ifndef AVOID_QT
-            detector.visualize(draw_scale);
-            if (cfg.score)
-            {
-                gestoos::score_heat_map(detector.get_probability_map(cfg.score), heat_prob, 0., 10.);
-                cv::resize(heat_prob, heat_prob, cv::Size(0,0), draw_scale, draw_scale);
-                cv::imshow("Detection map", heat_prob);
-            }
-
-            int key = cv::waitKey(1);
-
-            // ESC
-            if ( key==27 ) break;
-        #else
-            int id =  detector.get_gesture().id;
-            if (id > 0 ) std::cout << "Detected gesture " << id << std::endl;
-        #endif
-        */
+        cv::imshow("Responses gesture0", colored0);
+        cv::imshow("Responses gesture1", colored1);
+        cv::waitKey(33);
     }
 
     return 0;
