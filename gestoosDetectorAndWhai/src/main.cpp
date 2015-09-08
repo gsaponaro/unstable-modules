@@ -74,18 +74,6 @@ public:
     }
 };
 
-void dumpDetectorLabels(std::vector<int> labels)
-{
-    std::cout << "gesture detector labels: ";
-    for (std::vector<int>::const_iterator i = labels.begin();
-         i != labels.end();
-         ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    std::cout << std::endl;
-}
-
 int main(int argc, char* argv[])
 {
     //Configure camera
@@ -104,9 +92,14 @@ int main(int argc, char* argv[])
 
     std::vector<int> labels;
     labels = detector.get_labels();
-    dumpDetectorLabels(labels);
+    //dumpDetectorLabels(labels); // print IDs of gestures, for debug
 
-    //Declare WHAITracker
+    // variables to visualize score maps
+    std::vector<cv::Mat> sm;
+    std::vector<cv::Mat> colored;
+    bool first_run = true;
+
+    // initialize WHAI hand tracker
     gestoos::tracking::WHAITracker whai;
     //To store the current frame num
     gestoos::tracking::ObjectTrack::ts_type frame = 0;
@@ -158,19 +151,73 @@ int main(int argc, char* argv[])
 
         ++frame;
 
-        // visualize score map(s) of detector
-        cv::Mat sm0 = detector.get_probability_map(0);
+        // compute score map of detector for each gesture
+        double min_val=1, max_val=10;
+
+        for (std::vector<int>::const_iterator i = labels.begin();
+             i != labels.end();
+             ++i)
+        {
+            int idx = i - labels.begin(); // 0, 1, 2, ...
+            if (first_run)
+            {
+                // create and compute sm[idx]
+                sm.push_back(detector.get_probability_map(1+idx)); // skip 0 (negative class)
+
+                // create and compute colored[idx]
+                colored.push_back(cv::Mat());
+                gestoos::score_heat_map(sm[idx], colored[idx], min_val, max_val);
+            }
+            else
+            {
+                // just update
+                sm[idx] = detector.get_probability_map(1+idx);
+                gestoos::score_heat_map(sm[idx], colored[idx], min_val, max_val);
+            }
+
+        }
+
+        if (first_run)
+            first_run = false;
+
+        // visualize
+        for (std::vector<int>::const_iterator i = labels.begin();
+             i != labels.end();
+             ++i)
+        {
+            std::stringstream win_name;
+            win_name << *i << " score";
+            int idx = i - labels.begin(); // 0, 1, 2, ...
+            cv::imshow(win_name.str(), colored[idx]);
+        }
+        cv::waitKey(33);
+
+        /*
+        cv::Mat sm0 = detector.get_probability_map(1);
         cv::Mat colored0;
         gestoos::score_heat_map(sm0, colored0, 1, 10);
 
-        cv::Mat sm1 = detector.get_probability_map(1);
+        cv::Mat sm1 = detector.get_probability_map(2);
         cv::Mat colored1;
         gestoos::score_heat_map(sm1, colored1, 1, 10);
 
         cv::imshow("Responses gesture0", colored0);
         cv::imshow("Responses gesture1", colored1);
         cv::waitKey(33);
+        */
     }
 
     return 0;
+}
+
+void dumpDetectorLabels(std::vector<int> &labels)
+{
+    std::cout << "gesture detector labels: ";
+    for (std::vector<int>::const_iterator i = labels.begin();
+         i != labels.end();
+         ++i)
+    {
+        std::cout << *i << ' ';
+    }
+    std::cout << std::endl;
 }
