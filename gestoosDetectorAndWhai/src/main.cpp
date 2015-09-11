@@ -6,8 +6,6 @@
  *
  */
 
-#include <csignal>
-
 #include <boost/format.hpp>
 #include <boost/thread/thread.hpp>
 
