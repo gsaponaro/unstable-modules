@@ -6,6 +6,11 @@
  *
  */
 
+#include <csignal>
+
+#include <boost/format.hpp>
+#include <boost/thread/thread.hpp>
+
 #include <fezoolib/Core/BoundingBox.hpp>
 #include <fezoolib/Core/CaptureRGBD.hpp>
 #include <fezoolib/Core/DepthFiltering.hpp>
@@ -16,8 +21,6 @@
 #include <fezoolib/Core/Visualization.hpp>
 #include <fezoolib/Detection/GestureDetector.hpp>
 #include <fezoolib/Tracking/WHAITracker.hpp>
-#include <boost/format.hpp>
-#include <boost/thread/thread.hpp>
 
 cv::Mat depth_map;
 
@@ -31,22 +34,13 @@ namespace gesture_tester
     static const std::string DESCRIPTION = (std::string) "This demo detects Gestoos in real-time on a RGBD camera at QVGA resolution. \n " +
     "\n" +
     "Current available gestures and class labels:\n"+
-    " 1: Tee\n"+
-    " 2: Pause\n"+
-    " 3: Voldown\n"+
-    " 4: Volup\n"+
-    " 5: Cross\n"+
-    " 6: Ok\n"+
-    " 7: Fwd (note: asymmetric gesture)\n"+
-    " 8: Rewind(note: asymmetric gesture)\n"+
-    "\nFor more details, ask contact@fezoo.cat \n" +
-    "\n\n To run the demo, simply invoke the tool from command line and tell the path to the desired gestures320.ini file" +
-    "\n gestureDemo --ini_file <path to>/gestures320.ini\n\n" +
-    "\n\n You can also activate/deactivate gestures in gestures320.ini by removing lines." ;
+    "(tbc)\n"+
+    "\n\n To run the demo, simply invoke the tool from command line and tell the path to the desired gestures ini file:" +
+    "\n ./executable --ini_file <path to>/<ini file name>\n\n" +
+    "\n\n You can also activate/deactivate gestures in the ini file by removing lines." ;
 }
 
 using namespace gesture_tester;
-using namespace gestoos;
 
 class TestConfig : public gestoos::ToolConfig
 {
@@ -57,13 +51,13 @@ public:
     TestConfig(int argc, char* argv[]) :
         gestoos::ToolConfig(TOOL_NAME, BRIEF, DESCRIPTION)
     {
-        ini_file = "./config/gestures320.ini";
+        ini_file = "./config/handGestures.ini";
 
         score = 0;
 
         //add options
         add_option(ini_file, "ini_file", "Configuration file with gestures and thresholds");
-        add_option(score, "score", "Display score map for a given gesture ordinal (the n-th gesture in your gesture.ini)");
+        add_option(score, "score", "Display score map for a given gesture ordinal (the n-th gesture in your gesture ini)");
 
         // configure
         configure(argc, argv);
@@ -74,9 +68,40 @@ public:
     }
 };
 
+// Rendering function called by the render thread
+void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *tracker)
+{
+    //Exit if empty image!
+    if( depth_map.cols == 0 )
+    {
+        return;
+    }
+
+    cv::Mat color_img;
+
+    // Normalizing depth data values
+    depth_map.convertTo(color_img, CV_8UC1, 1/15.0);
+    // Converting from Grayscale to RGB
+    cv::cvtColor(color_img, color_img, CV_GRAY2BGR);
+
+    //Set to false to hide trajectory
+    bool show_trajectory = true;
+    //Comment to hide hand position and trajectory
+    tracker->visualize(color_img,
+                       1, // scale
+                       show_trajectory);
+    //Comment to hide hand labels
+    tracker->show_labels(color_img,
+                         3); // scale
+
+    cv::imshow("Hand Tracker", color_img);
+
+    int key = cv::waitKey(1);
+}
+
 int main(int argc, char* argv[])
 {
-    //Configure camera
+    // configure camera
     gestoos::CaptureRGBD capture;
     capture.init("", // oni_file
                  0,  // usingkinect
@@ -86,8 +111,8 @@ int main(int argc, char* argv[])
     gestoos::detection::GestureDetector detector;
     TestConfig cfg(argc, argv);
     detector.set_video_mode(gestoos::CaptureRGBD::QVGA_30FPS);
-    detector.init_detector("./config/handGestures.ini", // ini_file
-                           ".");                        // bundle_path
+    detector.init_detector(cfg.ini_file, // ini_file
+                           ".");         // bundle_path
     detector.use_motion_detection(false);
 
     std::vector<int> labels;
@@ -111,7 +136,6 @@ int main(int argc, char* argv[])
         /*
          * Capture
          */
-
         capture.get_depth_frame();
         depth_map = capture.depth_frame();
 
@@ -124,6 +148,8 @@ int main(int argc, char* argv[])
          * Detect hands using WHAI
          */
         whai.update(depth_map, frame);
+
+        render_func(depth_map, &whai);
 
         //Get hand positions
         std::vector<gestoos::tracking::ObjectTrack*> objects = whai.active_tracks();
@@ -149,8 +175,6 @@ int main(int argc, char* argv[])
         //detector.process(); // input from RGBD sensor
         detector.process(depth_map); // input from filtered hand tracker map
 
-        ++frame;
-
         // compute score map of detector for each gesture
         double min_val=1, max_val=10;
 
@@ -171,40 +195,33 @@ int main(int argc, char* argv[])
             else
             {
                 // just update
-                sm[idx] = detector.get_probability_map(1+idx);
+                sm[idx] = detector.get_probability_map(1+idx); // skip 0 (negative class)
                 gestoos::score_heat_map(sm[idx], colored[idx], min_val, max_val);
             }
-
         }
 
-        if (first_run)
-            first_run = false;
-
-        // visualize
+        // actual visualization
         for (std::vector<int>::const_iterator i = labels.begin();
              i != labels.end();
              ++i)
         {
             std::stringstream win_name;
-            win_name << *i << " score";
+            win_name << *i << " score"; // "6 score", "15 score" etc.
             int idx = i - labels.begin(); // 0, 1, 2, ...
             cv::imshow(win_name.str(), colored[idx]);
+            if (first_run)
+            {
+                cv::moveWindow(win_name.str(), 1600, 260*(1+idx));
+                first_run = false;
+            }
         }
+
+        // show (filtered) depth map
+        //detector.visualize();
+
         cv::waitKey(33);
 
-        /*
-        cv::Mat sm0 = detector.get_probability_map(1);
-        cv::Mat colored0;
-        gestoos::score_heat_map(sm0, colored0, 1, 10);
-
-        cv::Mat sm1 = detector.get_probability_map(2);
-        cv::Mat colored1;
-        gestoos::score_heat_map(sm1, colored1, 1, 10);
-
-        cv::imshow("Responses gesture0", colored0);
-        cv::imshow("Responses gesture1", colored1);
-        cv::waitKey(33);
-        */
+        ++frame;
     }
 
     return 0;
