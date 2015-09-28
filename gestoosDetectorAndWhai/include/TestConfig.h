@@ -1,19 +1,3 @@
-/* 
- * Author: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
- * This program uses Gestoos SDK by Fezoo Labs:
- *     http://www.gestoos.com/
- *     http://www.fezoo.cat/
- *
- */
-
-#include <yarp/os/Log.h>
-#include <yarp/os/Network.h>
-#include <yarp/os/RFModule.h>
-
-// TODO: fix path
-#include "../include/GestoosModule.h"
-
-/*
 namespace gesture_tester
 {
     // Tool name
@@ -31,24 +15,30 @@ namespace gesture_tester
 }
 
 using namespace gesture_tester;
-*/
 
-int main(int argc, char* argv[])
+class TestConfig : public gestoos::ToolConfig
 {
-    // configure YARP
-    yarp::os::Network yarp;
-    if (!yarp::os::Network::checkNetwork())
+public:
+    std::string ini_file;
+    int score;
+
+    //TestConfig(int argc, char* argv[]) :
+    TestConfig() :
+        gestoos::ToolConfig(TOOL_NAME, BRIEF, DESCRIPTION)
     {
-        yError("yarpserver not available!");
-        return 1; // EXIT_FAILURE
+        ini_file = "./config/handGestures.ini";
+
+        score = 0;
+
+        //add options
+        add_option(ini_file, "ini_file", "Configuration file with gestures and thresholds");
+        add_option(score, "score", "Display score map for a given gesture ordinal (the n-th gesture in your gesture ini)");
+
+        // configure
+        //configure(argc, argv);
+
+        //read
+        read("ini_file", ini_file);
+        read("score", score);
     }
-
-    ResourceFinder rf;
-    rf.setVerbose(false);
-    rf.setDefaultContext("gestoos");
-    rf.setDefaultConfigFile("gestoos.ini");
-    rf.configure(argc, argv);
-
-    GestoosModule mod;
-    return mod.runModule(rf);
-}
+};
