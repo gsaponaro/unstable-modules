@@ -31,6 +31,7 @@ private:
     gestoos::tracking::ObjectTrack::ts_type frame; // current frame number
 
     std::vector<int> labels;
+    std::vector<double> thresholds;
 
     // variables to visualize score maps
     std::vector<cv::Mat> sm;
@@ -44,7 +45,7 @@ public:
     //bool interruptModule();
     //bool close();
 
-    //double getPeriod();
+    double getPeriod();
     bool updateModule();
 };
 

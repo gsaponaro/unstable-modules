@@ -1,6 +1,6 @@
-// TODO: fix path
-#include "../include/GestoosModule.h"
-#include "../include/TestConfig.h"
+#include "GestoosModule.h"
+#include "GestoosSupport.h"
+#include "TestConfig.h"
 
 // Rendering function called by the render thread
 void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *tracker)
@@ -40,24 +40,39 @@ bool GestoosModule::configure(ResourceFinder &rf)
                  0,  // usingkinect
                  gestoos::CaptureRGBD::QVGA_30FPS);
 
+    // configure hand tracker
+    frame = 0;
+    whai.init("./config/whai.ini");
+
     // configure gesture detector
     //TestConfig cfg(argc, argv);
     TestConfig cfg;
     detector.set_video_mode(gestoos::CaptureRGBD::QVGA_30FPS);
     detector.init_detector(cfg.ini_file, // ini_file
                            ".");         // bundle_path
-    detector.use_motion_detection(false);
+    detector.use_motion_detection(true);
+    //detector.activate_multithreading(true);
+    //detector.enable_all_gestures(true);
+    //detector.enable_gesture(1,true);
+    //detector.enable_gesture(6,true); // OK / close hand
+    //detector.enable_gesture(15,false); // OPEN hand
 
     labels = detector.get_labels();
-    //dumpDetectorLabels(labels); // print IDs of gestures, for debug
+    std::cout << "gesture detector labels: ";
+    dumpVector(labels);
+
+    thresholds = detector.get_thresholds(); // index 0: first positive gesture
+    std::cout << "gesture detector thresholds: ";
+    dumpVector(thresholds);
 
     first_run = true;
 
-    // configure WHAI hand tracker
-    frame = 0;
-    whai.init("./config/whai.ini");
-
     return true;
+}
+
+double GestoosModule::getPeriod()
+{
+    return 0.0; // sync on incoming data
 }
 
 bool GestoosModule::updateModule()
@@ -104,18 +119,41 @@ bool GestoosModule::updateModule()
     //detector.process(); // input from RGBD sensor
     detector.process(depth_map); // input from filtered hand tracker map
 
+    //detector.set_depth_limits(300.0, 3500.0);
+    double minDepth, maxDepth;
+    detector.min_max_depth(minDepth, maxDepth); // forced 800, 3500 !?
+    //std::cout << "minDepth=" << minDepth << " maxDepth=" << maxDepth << std::endl;
+
+    /*
+    cv::Mat myMat0 = detector.get_probability_map(0);
+    double myMin0, myMax0;
+    cv::minMaxLoc(myMat0, &myMin0, &myMax0, NULL, NULL);
+    std::cout << "class 0 probabilities: min=" << myMin0 << ", max=" << myMax0 << std::endl;
+
+    cv::Mat myMat1 = detector.get_probability_map(1);
+    double myMin1, myMax1;
+    cv::minMaxLoc(myMat1, &myMin1, &myMax1, NULL, NULL);
+    std::cout << "class 1 probabilities: min=" << myMin1 << ", max=" << myMax1 << std::endl;
+
+    cv::Mat myMat2 = detector.get_probability_map(2);
+    double myMin2, myMax2;
+    cv::minMaxLoc(myMat2, &myMin2, &myMax2, NULL, NULL);
+    std::cout << "class 2 probabilities: min=" << myMin2 << ", max=" << myMax2 << std::endl;
+    */
+
     // compute score map of detector for each gesture
-    double min_val=1, max_val=10;
+    double min_val=1., max_val=10.;
 
     for (std::vector<int>::const_iterator i = labels.begin();
          i != labels.end();
          ++i)
     {
         int idx = i - labels.begin(); // 0, 1, 2, ...
+        //std::cout << "i=" << *i << ", idx=" << idx << std::endl;
         if (first_run)
         {
             // create and compute sm[idx]
-            sm.push_back(detector.get_probability_map(1+idx)); // skip 0 (negative class)
+            sm.push_back(detector.get_probability_map(1+idx)); // 1, 2, ... note: skip 0 (negative class)
 
             // create and compute colored[idx]
             colored.push_back(cv::Mat());
@@ -124,9 +162,24 @@ bool GestoosModule::updateModule()
         else
         {
             // just update
-            sm[idx] = detector.get_probability_map(1+idx); // skip 0 (negative class)
+            sm[idx] = detector.get_probability_map(1+idx); // 1, 2, ... note: skip 0 (negative class)
             gestoos::score_heat_map(sm[idx], colored[idx], min_val, max_val);
         }
+    }
+
+    gestoos::detection::GestureDetector::GestureTraits traits;
+    traits = detector.get_gesture();
+    if (traits.id > 0)
+    {
+        std::cout << "*** ";
+        if (traits.id==6)
+            std::cout << "CLOSE ";
+        else if (traits.id==15)
+            std::cout << "OPEN  ";
+        std::cout << " id=" << traits.id
+                  << " u=" << traits.u
+                  << " v=" << traits.v
+                  << " z=" << traits.z << std::endl;
     }
 
     // actual visualization

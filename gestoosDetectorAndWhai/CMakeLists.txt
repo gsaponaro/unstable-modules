@@ -66,7 +66,8 @@ file(GLOB folder_header include/iCub/*.hpp)
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
-include_directories(${Gestoos_DIR}/include
+include_directories(${PROJECT_SOURCE_DIR}/include
+                    ${Gestoos_DIR}/include
                     ${Gestoos_DIR}/include/opencv
                     ${Gestoos_DIR}/include/opencv2
                     ${YARP_INCLUDE_DIRS})
