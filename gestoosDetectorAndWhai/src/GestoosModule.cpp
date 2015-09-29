@@ -35,6 +35,11 @@ void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *track
 
 bool GestoosModule::configure(ResourceFinder &rf)
 {
+    moduleName = rf.check("name", Value("gestoos")).asString();
+    yarp::os::RFModule::setName(moduleName.c_str());
+    outTraitsPortName = "/" + moduleName + "/gestureTraits:o";
+    outTraitsPort.open(outTraitsPortName);
+
     // configure camera
     capture.init("", // oni_file
                  0,  // usingkinect
@@ -52,10 +57,6 @@ bool GestoosModule::configure(ResourceFinder &rf)
                            ".");         // bundle_path
     detector.use_motion_detection(true);
     //detector.activate_multithreading(true);
-    //detector.enable_all_gestures(true);
-    //detector.enable_gesture(1,true);
-    //detector.enable_gesture(6,true); // OK / close hand
-    //detector.enable_gesture(15,false); // OPEN hand
 
     labels = detector.get_labels();
     std::cout << "gesture detector labels: ";
@@ -67,6 +68,18 @@ bool GestoosModule::configure(ResourceFinder &rf)
 
     first_run = true;
 
+    return true;
+}
+
+bool GestoosModule::interruptModule()
+{
+    outTraitsPort.interrupt();
+    return true;
+}
+
+bool GestoosModule::close()
+{
+    outTraitsPort.close();
     return true;
 }
 
@@ -180,6 +193,14 @@ bool GestoosModule::updateModule()
                   << " u=" << traits.u
                   << " v=" << traits.v
                   << " z=" << traits.z << std::endl;
+
+        yarp::os::Bottle &b = outTraitsPort.prepare();
+        b.clear();
+        b.addInt(traits.id);
+        b.addInt(traits.u);
+        b.addInt(traits.v);
+        b.addDouble( static_cast<double>(traits.z) );
+        outTraitsPort.write();
     }
 
     // actual visualization

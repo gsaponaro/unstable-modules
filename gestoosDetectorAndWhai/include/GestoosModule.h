@@ -1,6 +1,8 @@
 #ifndef __GESTOOS_MODULE_H__
 #define __GESTOOS_MODULE_H__
 
+#include <string>
+
 #include <boost/format.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -15,6 +17,8 @@
 #include <fezoolib/Detection/GestureDetector.hpp>
 #include <fezoolib/Tracking/WHAITracker.hpp>
 
+#include <yarp/os/Bottle.h>
+#include <yarp/os/BufferedPort.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
@@ -40,10 +44,14 @@ private:
 
     cv::Mat depth_map;
 
+    std::string moduleName;
+    std::string outTraitsPortName;
+    BufferedPort<Bottle> outTraitsPort;
+
 public:
     bool configure(ResourceFinder &rf);
-    //bool interruptModule();
-    //bool close();
+    bool interruptModule();
+    bool close();
 
     double getPeriod();
     bool updateModule();
