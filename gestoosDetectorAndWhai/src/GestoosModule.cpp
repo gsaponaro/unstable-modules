@@ -5,7 +5,7 @@
 // Rendering function called by the render thread
 void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *tracker)
 {
-    //Exit if empty image!
+    // Exit if empty image
     if( depth_map.cols == 0 )
     {
         return;
@@ -33,30 +33,59 @@ void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *track
     int key = cv::waitKey(1);
 }
 
+void GestoosModule::dumpScoreMapProbabilities(const int class_no)
+{
+    cv::Mat myMat = detector.get_probability_map(class_no);
+    double myMin, myMax;
+    cv::minMaxLoc(myMat, &myMin, &myMax, NULL, NULL);
+    std::cout << "class " << class_no << " probabilities:"
+              //<< " min=" << myMin <<
+              << " max=" << myMax << std::endl;
+}
+
 bool GestoosModule::configure(ResourceFinder &rf)
 {
+    // yarp
     moduleName = rf.check("name", Value("gestoos")).asString();
+    useMultithreading =
+        rf.check("useMultithreading",Value("on")).asString()=="on"?true:false;
+    useMotionDetection =
+        rf.check("useMotionDetection",Value("on")).asString()=="on"?true:false;
+    samplingStride = rf.check("samplingStride", Value(4)).asInt();
     yarp::os::RFModule::setName(moduleName.c_str());
-    outTraitsPortName = "/" + moduleName + "/gestureTraits:o";
-    outTraitsPort.open(outTraitsPortName);
+    outScorePortName = "/" + moduleName + "/gesture:o";
+    outScorePort.open(outScorePortName);
 
-    // configure camera
+    if (useMultithreading)
+        yInfo("multithreading on");
+    else
+        yInfo("multithreading off");
+
+    if (useMotionDetection)
+        yInfo("motion detection on");
+    else
+        yInfo("motion detection off");
+
+    yInfo("sampling stride %d", samplingStride);
+
+    // camera
     capture.init("", // oni_file
                  0,  // usingkinect
                  gestoos::CaptureRGBD::QVGA_30FPS);
 
-    // configure hand tracker
+    // hand tracker
     frame = 0;
     whai.init("./config/whai.ini");
 
-    // configure gesture detector
+    // gesture detector
     //TestConfig cfg(argc, argv);
     TestConfig cfg;
     detector.set_video_mode(gestoos::CaptureRGBD::QVGA_30FPS);
     detector.init_detector(cfg.ini_file, // ini_file
                            ".");         // bundle_path
-    detector.use_motion_detection(true);
-    //detector.activate_multithreading(true);
+    detector.activate_multithreading(useMultithreading);
+    detector.use_motion_detection(useMotionDetection);
+    detector.set_sampling_downscale(samplingStride);
 
     labels = detector.get_labels();
     std::cout << "gesture detector labels: ";
@@ -73,13 +102,13 @@ bool GestoosModule::configure(ResourceFinder &rf)
 
 bool GestoosModule::interruptModule()
 {
-    outTraitsPort.interrupt();
+    outScorePort.interrupt();
     return true;
 }
 
 bool GestoosModule::close()
 {
-    outTraitsPort.close();
+    outScorePort.close();
     return true;
 }
 
@@ -137,22 +166,9 @@ bool GestoosModule::updateModule()
     detector.min_max_depth(minDepth, maxDepth); // forced 800, 3500 !?
     //std::cout << "minDepth=" << minDepth << " maxDepth=" << maxDepth << std::endl;
 
-    /*
-    cv::Mat myMat0 = detector.get_probability_map(0);
-    double myMin0, myMax0;
-    cv::minMaxLoc(myMat0, &myMin0, &myMax0, NULL, NULL);
-    std::cout << "class 0 probabilities: min=" << myMin0 << ", max=" << myMax0 << std::endl;
-
-    cv::Mat myMat1 = detector.get_probability_map(1);
-    double myMin1, myMax1;
-    cv::minMaxLoc(myMat1, &myMin1, &myMax1, NULL, NULL);
-    std::cout << "class 1 probabilities: min=" << myMin1 << ", max=" << myMax1 << std::endl;
-
-    cv::Mat myMat2 = detector.get_probability_map(2);
-    double myMin2, myMax2;
-    cv::minMaxLoc(myMat2, &myMin2, &myMax2, NULL, NULL);
-    std::cout << "class 2 probabilities: min=" << myMin2 << ", max=" << myMax2 << std::endl;
-    */
+    //dumpScoreMapProbabilities(0); // negative class
+    //dumpScoreMapProbabilities(1);
+    //dumpScoreMapProbabilities(2);
 
     // compute score map of detector for each gesture
     double min_val=1., max_val=10.;
@@ -166,7 +182,7 @@ bool GestoosModule::updateModule()
         if (first_run)
         {
             // create and compute sm[idx]
-            sm.push_back(detector.get_probability_map(1+idx)); // 1, 2, ... note: skip 0 (negative class)
+            sm.push_back(detector.get_probability_map(1+idx)); // 1, 2, ... (skip 0: negative class)
 
             // create and compute colored[idx]
             colored.push_back(cv::Mat());
@@ -175,7 +191,7 @@ bool GestoosModule::updateModule()
         else
         {
             // just update
-            sm[idx] = detector.get_probability_map(1+idx); // 1, 2, ... note: skip 0 (negative class)
+            sm[idx] = detector.get_probability_map(1+idx); // 1, 2, ... (skip 0: negative class)
             gestoos::score_heat_map(sm[idx], colored[idx], min_val, max_val);
         }
     }
@@ -185,22 +201,28 @@ bool GestoosModule::updateModule()
     if (traits.id > 0)
     {
         std::cout << "*** ";
-        if (traits.id==6)
-            std::cout << "CLOSE ";
-        else if (traits.id==15)
-            std::cout << "OPEN  ";
+
+        if (traits.id==1)
+            std::cout << "CLOSE";
+        else if (traits.id==2)
+            std::cout << "VICTORY";
+        else if (traits.id==3)
+            std::cout << "TEE";
+        else if (traits.id==4)
+            std::cout << "SILENCE";
+
         std::cout << " id=" << traits.id
                   << " u=" << traits.u
                   << " v=" << traits.v
                   << " z=" << traits.z << std::endl;
 
-        yarp::os::Bottle &b = outTraitsPort.prepare();
+        yarp::os::Bottle &b = outScorePort.prepare();
         b.clear();
         b.addInt(traits.id);
         b.addInt(traits.u);
         b.addInt(traits.v);
         b.addDouble( static_cast<double>(traits.z) );
-        outTraitsPort.write();
+        outScorePort.write();
     }
 
     // actual visualization
@@ -209,7 +231,7 @@ bool GestoosModule::updateModule()
          ++i)
     {
         std::stringstream win_name;
-        win_name << *i << " score"; // "6 score", "15 score" etc.
+        win_name << *i << " score";
         int idx = i - labels.begin(); // 0, 1, 2, ...
         cv::imshow(win_name.str(), colored[idx]);
         if (first_run)

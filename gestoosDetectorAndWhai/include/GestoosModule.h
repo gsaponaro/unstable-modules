@@ -45,8 +45,11 @@ private:
     cv::Mat depth_map;
 
     std::string moduleName;
-    std::string outTraitsPortName;
-    BufferedPort<Bottle> outTraitsPort;
+    std::string outScorePortName;
+    BufferedPort<Bottle> outScorePort;
+    bool useMultithreading;
+    bool useMotionDetection;
+    int samplingStride;
 
 public:
     bool configure(ResourceFinder &rf);
@@ -55,6 +58,8 @@ public:
 
     double getPeriod();
     bool updateModule();
+
+    void dumpScoreMapProbabilities(const int class_no);
 };
 
 #endif // __GESTOOS_MODULE_H__
