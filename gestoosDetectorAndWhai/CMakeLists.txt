@@ -27,12 +27,8 @@ message(STATUS "Found libcurl: ${CURL}")
 #OpenNI
 set (OPENNI2_LIB ${Gestoos_DIR}/lib/libOpenNI2.so)
 set (OPENNI2_INCLUDE ${Gestoos_DIR}/include/OpenNI2/Include)
-message(STATUS "Found ${OPENNI2_INCLUDE} includes and ${OPENNI2_LIB}")
-include_directories(${OPENNI2_INCLUDE})
+message(STATUS "Found OpenNI: ${OPENNI2_INCLUDE}, ${OPENNI2_LIB}")
 
-#FEZOOLIB + Local dependencies src and includes
-include_directories(${Gestoos_DIR}/include ${Gestoos_DIR}/include/opencv ${Gestoos_DIR}/include/opencv2)
-#Library (release, debug)
 unset(FEZOOLIB CACHE)
 message(STATUS "Build type ${CMAKE_BUILD_TYPE}")
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -58,12 +54,34 @@ if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
 endif()
 message(STATUS "Found library ${FEZOOLIB}")
 
+find_package(YARP)
 
 message(STATUS "Copying configuration files from ${CMAKE_SOURCE_DIR}/config to ${PROJECT_BINARY_DIR}")
 #execute_process(COMMAND cp -r ${CMAKE_SOURCE_DIR}/config ${PROJECT_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${PROJECT_BINARY_DIR})
-set(SOURCE ./src/main.cpp)
-add_executable(${PROJECT_NAME} ${SOURCE})
-target_link_libraries(${PROJECT_NAME} ${FEZOOLIB} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${OPENNI2_LIB} ${CURL} ${LIBGLSL})
+
+file(GLOB folder_source src/*.cpp)
+file(GLOB folder_header include/iCub/*.hpp)
+
+source_group("Source Files" FILES ${folder_source})
+source_group("Header Files" FILES ${folder_header})
+
+include_directories(${PROJECT_SOURCE_DIR}/include
+                    ${Gestoos_DIR}/include
+                    ${Gestoos_DIR}/include/opencv
+                    ${Gestoos_DIR}/include/opencv2
+                    ${YARP_INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
+
+target_link_libraries(${PROJECT_NAME}
+                      ${FEZOOLIB}
+                      ${Boost_LIBRARIES}
+                      ${OpenCV_LIBS}
+                      ${OPENNI2_LIB}
+                      ${CURL}
+                      ${LIBGLSL}
+                      ${YARP_LIBRARIES})
+
 message(STATUS "Setting RPATH ${OPENNI2_ROOT}/Redist:${Boost_LIBRARY_DIRS}")  
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${OPENNI2_ROOT}/Redist;${Boost_LIBRARY_DIRS}")
