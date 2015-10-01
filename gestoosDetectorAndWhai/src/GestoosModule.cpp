@@ -147,7 +147,15 @@ bool GestoosModule::updateModule()
     roi.height = 31;
     for (int i=0; i < objects.size(); ++i)
     {
+        //double score = objects[i]->get_score();
+        //std::cout << "hand score=" << score;
+
         cv::Point2f p = objects[i]->get_position_2d();
+
+        //std::cout << " pos2d=" << p.x << "," << p.y;
+        //cv::Point3f p3d = objects[i]->get_position();
+        //std::cout << " pos3d=" << p3d.x << "," << p3d.y << "," << p3d.z << std::endl;
+
         roi.x = p.x-15;
         roi.y = p.y-15;
         //Set local neighbourhood to 255 to apply gesture detection on these regions
@@ -162,8 +170,8 @@ bool GestoosModule::updateModule()
     detector.process(depth_map); // input from filtered hand tracker map
 
     //detector.set_depth_limits(300.0, 3500.0);
-    double minDepth, maxDepth;
-    detector.min_max_depth(minDepth, maxDepth); // forced 800, 3500 !?
+    //double minDepth, maxDepth;
+    //detector.min_max_depth(minDepth, maxDepth); // forced 800, 3500 !?
     //std::cout << "minDepth=" << minDepth << " maxDepth=" << maxDepth << std::endl;
 
     //dumpScoreMapProbabilities(0); // negative class
@@ -196,32 +204,47 @@ bool GestoosModule::updateModule()
         }
     }
 
-    gestoos::detection::GestureDetector::GestureTraits traits;
-    traits = detector.get_gesture();
-    if (traits.id > 0)
+    gestoos::detection::GestureDetector::GestureTraits winnerGesture;
+    winnerGesture = detector.get_gesture();
+    if (winnerGesture.id > 0)
     {
-        std::cout << "*** ";
+        double winnerScore = 0.0;
+        //winnerScore = sm[winnerGesture.id-1].at<double>(winnerGesture.v,  // row
+        //                                                winnerGesture.u); // col
+        cv::Point winnerPoint;
+        cv::minMaxLoc(sm[winnerGesture.id-1], // prob. map
+                      NULL, // minimum value
+                      &winnerScore, // maximum value
+                      NULL, // location of minimum
+                      &winnerPoint // location of maximum
+                      // mask
+                      );
 
-        if (traits.id==1)
+        std::cout << "*** winner: ";
+
+        if (winnerGesture.id==1)
             std::cout << "CLOSE";
-        else if (traits.id==2)
+        else if (winnerGesture.id==2)
             std::cout << "VICTORY";
-        else if (traits.id==3)
+        else if (winnerGesture.id==3)
             std::cout << "TEE";
-        else if (traits.id==4)
+        else if (winnerGesture.id==4)
             std::cout << "SILENCE";
 
-        std::cout << " id=" << traits.id
-                  << " u=" << traits.u
-                  << " v=" << traits.v
-                  << " z=" << traits.z << std::endl;
+        std::cout << " id=" << winnerGesture.id
+                  << " score=" << winnerScore
+                  << " x=" << winnerPoint.x
+                  << " y=" << winnerPoint.y
+                  << " z=" << winnerGesture.z << std::endl;
 
-        yarp::os::Bottle &b = outScorePort.prepare();
-        b.clear();
-        b.addInt(traits.id);
-        b.addInt(traits.u);
-        b.addInt(traits.v);
-        b.addDouble( static_cast<double>(traits.z) );
+        yarp::os::Bottle &out = outScorePort.prepare();
+        out.clear();
+        yarp::os::Bottle &winner = out.addList();
+        winner.addInt(winnerGesture.id);
+        winner.addDouble(winnerScore);
+        winner.addDouble( static_cast<double>(winnerPoint.x) );
+        winner.addDouble( static_cast<double>(winnerPoint.y) );
+        winner.addDouble( static_cast<double>(winnerGesture.z) );
         outScorePort.write();
     }
 
@@ -231,7 +254,7 @@ bool GestoosModule::updateModule()
          ++i)
     {
         std::stringstream win_name;
-        win_name << *i << " score";
+        win_name << "gesture " << *i;
         int idx = i - labels.begin(); // 0, 1, 2, ...
         cv::imshow(win_name.str(), colored[idx]);
         if (first_run)
