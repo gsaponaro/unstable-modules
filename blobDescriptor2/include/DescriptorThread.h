@@ -16,6 +16,8 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 
+#include <opencv2/legacy/compat.hpp> // cvCopyImage
+
 #include "Helpers.h"
 
 using namespace cv;
@@ -41,6 +43,7 @@ class BlobDescriptorThread : public RateThread
         string inRoiPortName;
 
         string outRawImgPortName;
+        string outAnnotatedImgPortName;
         string outAffPortName;
         string outToolAffPortName;
 
@@ -50,6 +53,7 @@ class BlobDescriptorThread : public RateThread
         BufferedPort<Bottle>             inRoiPort;
 
         BufferedPort<ImageOf<PixelBgr> > outRawImgPort;
+        BufferedPort<ImageOf<PixelBgr> > outAnnotatedImgPort;
         BufferedPort<Bottle>             outAffPort;
         BufferedPort<Bottle>             outToolAffPort;
 
@@ -59,9 +63,7 @@ class BlobDescriptorThread : public RateThread
         int minArea, maxArea;
 
         // for debug
-        string                           outViewImgPortName;
         string                           outBothPartsImgPortName;
-        BufferedPort<ImageOf<PixelBgr> > outViewImgPort;
         Port                             outBothPartsImgPort;
         Mat                              bothParts;
 
@@ -79,6 +81,9 @@ class BlobDescriptorThread : public RateThread
 
         bool threadInit();
         void run();
+
+        void run2d();
+        void run3d();
 };
 
 #endif
