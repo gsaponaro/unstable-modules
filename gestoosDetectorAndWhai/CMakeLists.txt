@@ -7,44 +7,32 @@ cmake_minimum_required (VERSION 2.8)
 
 project(gestoosDetectorAndWhai)
 
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# copied from GestoosDetector, replacing ${CMAKE_SOURCE_DIR}
-# with Gestoos_DIR=/home/gsaponaro/software/GestoosSDK_v0.6
-set(Gestoos_DIR /home/gsaponaro/software/GestoosSDK_v0.6)
-#OpenCV
+# Gestoos, fezoolib
+find_package(Gestoos)
+
+# OpenCV 3
 find_package(OpenCV 3.0 PATHS /home/gsaponaro/software/opencv-3.0.0/build)
-message (STATUS "Configured OpenCV ${OpenCV_VERSION}, libraries: ${OpenCV_LIBS}")
-#Boost
-message(STATUS "Setting Boost 1.54")
+#message (STATUS "OpenCV ${OpenCV_VERSION} found, libraries ${OpenCV_LIBS}, include directories ${OpenCV_INCLUDE_DIRS}")
+message (STATUS "OpenCV ${OpenCV_VERSION} found")
+
+# Boost 1.54
 set(Boost_LIBRARIES ${Gestoos_DIR}/lib/libboost_filesystem.so.1.54.0 ${Gestoos_DIR}/lib/libboost_serialization.so.1.54.0 ${Gestoos_DIR}/lib/libboost_thread.so.1.54.0 ${Gestoos_DIR}/lib/libboost_program_options.so.1.54.0 ${Gestoos_DIR}/lib/libboost_system.so.1.54.0)
 set(Boost_INCLUDE_DIRS ${Gestoos_DIR}/include)
 set(Boost_LIBRARY_DIRS ${Gestoos_DIR}/lib)
-message(STATUS "Using local version of Boost in ${Boost_INCLUDE_DIRS} and ${Boost_LIBRARIES}")
-#Lib curl
-find_library(CURL NAMES curl)
-message(STATUS "Found libcurl: ${CURL}")
-#OpenNI
-set (OPENNI2_LIB ${Gestoos_DIR}/lib/libOpenNI2.so)
-set (OPENNI2_INCLUDE ${Gestoos_DIR}/include/OpenNI2/Include)
-message(STATUS "Found OpenNI: ${OPENNI2_INCLUDE}, ${OPENNI2_LIB}")
+#message(STATUS "Boost 1.54 found: libraries ${Boost_LIBRARIES}, include directories ${Boost_INCLUDE_DIRS}")
+message(STATUS "Boost 1.54 found")
 
-unset(FEZOOLIB CACHE)
-message(STATUS "Build type ${CMAKE_BUILD_TYPE}")
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    message(STATUS "Building Debug")
-    find_library(FEZOOLIB
-                 NAMES fezoolib
-                 PATHS "${Gestoos_DIR}/lib/debug"
-                )
-else (${CMAKE_BUILD_TYPE} MATCHES "Release")
-    message(STATUS "Building Release")
-    find_library(FEZOOLIB
-                 NAMES fezoolib
-                 PATHS "${Gestoos_DIR}/lib/release"
-                )
-    add_definitions(-DNDEBUG)
-endif()
+# libcurl
+find_library(CURL NAMES curl)
+message(STATUS "libcurl found in ${CURL}")
+
+# OpenNI2
+set(OPENNI2_LIB ${Gestoos_DIR}/lib/libOpenNI2.so)
+set(OPENNI2_INCLUDE ${Gestoos_DIR}/include/OpenNI2/Include)
+message(STATUS "OpenNI found: libraries ${OPENNI2_LIB}, include directories ${OPENNI2_INCLUDE}")
+
 # compile using C++11 if GCC version >= 4.7
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                 OUTPUT_VARIABLE GCC_VERSION)
@@ -52,12 +40,16 @@ if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
     message(STATUS "Compiler Version >= 4.7  -->  compiling using c++11")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
 endif()
-message(STATUS "Found library ${FEZOOLIB}")
 
 find_package(YARP)
+if(YARP_FOUND)
+    #message(STATUS "YARP found: libraries in ${YARP_LIBRARIES}, include directories in ${YARP_INCLUDE_DIRS}")
+    message(STATUS "YARP found")
+else(NOT YARP_FOUND)
+    message(FATAL_ERROR "YARP not found")
+endif(YARP_FOUND)
 
 message(STATUS "Copying configuration files from ${CMAKE_SOURCE_DIR}/config to ${PROJECT_BINARY_DIR}")
-#execute_process(COMMAND cp -r ${CMAKE_SOURCE_DIR}/config ${PROJECT_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${PROJECT_BINARY_DIR})
 
 file(GLOB folder_source src/*.cpp)
@@ -83,5 +75,7 @@ target_link_libraries(${PROJECT_NAME}
                       ${LIBGLSL}
                       ${YARP_LIBRARIES})
 
-message(STATUS "Setting RPATH ${OPENNI2_ROOT}/Redist:${Boost_LIBRARY_DIRS}")  
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+#message(STATUS "Setting RPATH ${OPENNI2_ROOT}/Redist:${Boost_LIBRARY_DIRS}")  
+
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${OPENNI2_ROOT}/Redist;${Boost_LIBRARY_DIRS}")
