@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Gestoos)
 
 # OpenCV 3
-find_package(OpenCV 3.0 PATHS /home/gsaponaro/software/opencv-3.0.0/build)
+find_package(OpenCV 3.0 PATHS /home/g/NOBACKUP/opencv-3.0.0/build)
 #message (STATUS "OpenCV ${OpenCV_VERSION} found, libraries ${OpenCV_LIBS}, include directories ${OpenCV_INCLUDE_DIRS}")
 message (STATUS "OpenCV ${OpenCV_VERSION} found")
 
@@ -60,8 +60,8 @@ source_group("Header Files" FILES ${folder_header})
 
 include_directories(${PROJECT_SOURCE_DIR}/include
                     ${Gestoos_DIR}/include
-                    ${Gestoos_DIR}/include/opencv
-                    ${Gestoos_DIR}/include/opencv2
+                    ${OpenCV_INCLUDE_DIRS}
+                    ${OPENNI2_INCLUDE}
                     ${YARP_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
@@ -77,5 +77,4 @@ target_link_libraries(${PROJECT_NAME}
 
 #set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 #message(STATUS "Setting RPATH ${OPENNI2_ROOT}/Redist:${Boost_LIBRARY_DIRS}")  
-
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${OPENNI2_ROOT}/Redist;${Boost_LIBRARY_DIRS}")
+#set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${OPENNI2_ROOT}/Redist;${Boost_LIBRARY_DIRS}")
