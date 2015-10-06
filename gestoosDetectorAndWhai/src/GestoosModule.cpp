@@ -1,30 +1,29 @@
 #include "GestoosModule.h"
 #include "GestoosSupport.h"
-#include "TestConfig.h"
 
 // Rendering function called by the render thread
 void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *tracker)
 {
-    // Exit if empty image
-    if( depth_map.cols == 0 )
-    {
+    if (depth_map.cols == 0)
         return;
-    }
 
     cv::Mat color_img;
 
-    // Normalizing depth data values
+    // normalize
     depth_map.convertTo(color_img, CV_8UC1, 1/15.0);
-    // Converting from Grayscale to RGB
+
+    // convert from grayscale to RGB
     cv::cvtColor(color_img, color_img, CV_GRAY2BGR);
 
-    //Set to false to hide trajectory
+    // set to false to hide trajectory
     bool show_trajectory = true;
-    //Comment to hide hand position and trajectory
+
+    // comment to hide hand position and trajectory
     tracker->visualize(color_img,
                        1, // scale
                        show_trajectory);
-    //Comment to hide hand labels
+
+    // comment to hide hand labels
     tracker->show_labels(color_img,
                          3); // scale
 
@@ -69,7 +68,7 @@ bool GestoosModule::configure(ResourceFinder &rf)
     yInfo("sampling stride %d", samplingStride);
 
     // camera
-    capture.init("", // oni_file
+    capture.init("", // oni_file: use "" for live images
                  0,  // usingkinect
                  gestoos::CaptureRGBD::QVGA_30FPS);
 
@@ -78,11 +77,9 @@ bool GestoosModule::configure(ResourceFinder &rf)
     whai.init("./config/whai.ini");
 
     // gesture detector
-    //TestConfig cfg(argc, argv);
-    TestConfig cfg;
     detector.set_video_mode(gestoos::CaptureRGBD::QVGA_30FPS);
-    detector.init_detector(cfg.ini_file, // ini_file
-                           ".");         // bundle_path
+    detector.init_detector("./config/handGestures.ini", // ini_file
+                           ".");                        // bundle_path
     detector.activate_multithreading(useMultithreading);
     detector.use_motion_detection(useMotionDetection);
     detector.set_sampling_downscale(samplingStride);
@@ -119,28 +116,24 @@ double GestoosModule::getPeriod()
 
 bool GestoosModule::updateModule()
 {
-    /*
-     * Capture
-     */
+    // capture new frame
     capture.get_depth_frame();
     depth_map = capture.depth_frame();
 
-    /*
-     * Filter data, mainly filling depth holes
-     */
+    // filter data, mainly filling depth holes
     depth_map = gestoos::depth_error_filter(depth_map);
 
-    /*
-     * Detect hands using WHAI
-     */
+    // detect hands using WHAI hand tracker
     whai.update(depth_map, frame);
 
     render_func(depth_map, &whai);
 
-    //Get hand positions
+    // get hand positions
     std::vector<gestoos::tracking::ObjectTrack*> objects = whai.active_tracks();
     cv::Mat mask;
-    mask.create(cv::Size(320, 240), CV_8UC1);
+    mask.create(cv::Size(depth_map.cols,  // normally 320
+                         depth_map.rows), // normally 240
+                CV_8UC1);
     mask = cv::Scalar(0);
     cv::Rect roi;
     roi.width = 31;
@@ -209,8 +202,6 @@ bool GestoosModule::updateModule()
     if (winnerGesture.id > 0)
     {
         double winnerScore = 0.0;
-        //winnerScore = sm[winnerGesture.id-1].at<double>(winnerGesture.v,  // row
-        //                                                winnerGesture.u); // col
         cv::Point winnerPoint;
         cv::minMaxLoc(sm[winnerGesture.id-1], // prob. map
                       NULL, // minimum value
@@ -220,8 +211,8 @@ bool GestoosModule::updateModule()
                       // mask
                       );
 
+        /*
         std::cout << "*** winner: ";
-
         if (winnerGesture.id==1)
             std::cout << "CLOSE";
         else if (winnerGesture.id==2)
@@ -236,6 +227,7 @@ bool GestoosModule::updateModule()
                   << " x=" << winnerPoint.x
                   << " y=" << winnerPoint.y
                   << " z=" << winnerGesture.z << std::endl;
+        */
 
         yarp::os::Bottle &out = outScorePort.prepare();
         out.clear();
@@ -265,7 +257,7 @@ bool GestoosModule::updateModule()
     }
 
     // show (filtered) depth map
-    //detector.visualize();
+    detector.visualize();
 
     cv::waitKey(33);
 

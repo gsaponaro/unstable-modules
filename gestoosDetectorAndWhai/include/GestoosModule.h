@@ -29,9 +29,17 @@ using namespace yarp::os;
 class GestoosModule : public RFModule
 {
 private:
-    gestoos::CaptureRGBD capture;
-    gestoos::detection::GestureDetector detector;
-    gestoos::tracking::WHAITracker whai;
+    // yarp
+    std::string moduleName;
+    std::string outScorePortName;
+    BufferedPort<Bottle> outScorePort;
+    bool useMultithreading;
+    bool useMotionDetection;
+    int samplingStride;
+
+    gestoos::CaptureRGBD capture;                  // camera
+    gestoos::tracking::WHAITracker whai;           // hand tracker
+    gestoos::detection::GestureDetector detector;  // gesture detector
     gestoos::tracking::ObjectTrack::ts_type frame; // current frame number
 
     std::vector<int> labels;
@@ -43,13 +51,6 @@ private:
     bool first_run;
 
     cv::Mat depth_map;
-
-    std::string moduleName;
-    std::string outScorePortName;
-    BufferedPort<Bottle> outScorePort;
-    bool useMultithreading;
-    bool useMotionDetection;
-    int samplingStride;
 
 public:
     bool configure(ResourceFinder &rf);
