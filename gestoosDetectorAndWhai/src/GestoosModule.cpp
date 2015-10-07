@@ -84,9 +84,17 @@ bool GestoosModule::configure(ResourceFinder &rf)
     detector.use_motion_detection(useMotionDetection);
     detector.set_sampling_downscale(samplingStride);
 
-    labels = detector.get_labels();
+    labels = detector.get_labels(); // integers
     std::cout << "gesture detector labels: ";
     dumpVector(labels);
+
+    // save alphabetic names of gestures, currently not exposed by Gestoos API
+    std::vector<std::string> names =
+        {"close","victory","tee","silence"};
+    if (labels.size() != names.size())
+        yError("size mismatch between gesture IDs and gesture names, cannot initialize map");
+    else
+        initializeMap(labels,names,nameContainer);
 
     thresholds = detector.get_thresholds(); // index 0: first positive gesture
     std::cout << "gesture detector thresholds: ";
@@ -126,6 +134,7 @@ bool GestoosModule::updateModule()
     // detect hands using WHAI hand tracker
     whai.update(depth_map, frame);
 
+    // show WHAI hand tracker
     render_func(depth_map, &whai);
 
     // get hand positions
@@ -189,6 +198,7 @@ bool GestoosModule::updateModule()
         }
     }
 
+/*
     gestoos::detection::GestureDetector::GestureTraits winnerGesture;
     winnerGesture = detector.get_gesture();
     if (winnerGesture.id > 0)
@@ -202,17 +212,41 @@ bool GestoosModule::updateModule()
                       &winnerPoint // location of maximum
                       // mask
                       );
-
-        yarp::os::Bottle &out = outScorePort.prepare();
-        out.clear();
-        yarp::os::Bottle &winner = out.addList();
-        winner.addInt(winnerGesture.id);
-        winner.addDouble(winnerScore);
-        winner.addDouble( static_cast<double>(winnerPoint.x) );
-        winner.addDouble( static_cast<double>(winnerPoint.y) );
-        winner.addDouble( static_cast<double>(winnerGesture.z) );
-        outScorePort.write();
+        yDebug("*** depth around peak ***");
+        std::cout << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x+1) << std::endl;
+        std::cout << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x+1) << std::endl;
+        std::cout << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x+1) << std::endl;
+        yDebug("***");
     }
+    */
+
+    yarp::os::Bottle &out = outScorePort.prepare();
+    out.clear();
+    for (std::vector<cv::Mat>::const_iterator i = sm.begin();
+         i != sm.end();
+         ++i)
+    {
+        int idx = i - sm.begin(); // 0, 1, 2, ...
+        double score = 0.0;
+        cv::Point point;
+        cv::minMaxLoc(sm[idx], // prob. map
+                      NULL, // minimum value
+                      &score, // maximum value
+                      NULL, // location of minimum
+                      &point // location of maximum
+                      // mask
+                      );
+        double z = 0.0;
+        z = static_cast<double>(depth_map.at<uchar>(point));
+        yarp::os::Bottle &gest = out.addList();
+        gest.addInt( labels[idx] );
+        gest.addString( nameContainer[labels[idx]] );
+        gest.addDouble(score);
+        gest.addDouble( static_cast<double>(point.x) );
+        gest.addDouble( static_cast<double>(point.y) );
+        gest.addDouble( z );
+    }
+    outScorePort.write();
 
     // actual visualization
     for (std::vector<int>::const_iterator i = labels.begin();
@@ -220,7 +254,7 @@ bool GestoosModule::updateModule()
          ++i)
     {
         std::stringstream win_name;
-        win_name << "gesture " << *i;
+        win_name << nameContainer[*i];
         int idx = i - labels.begin(); // 0, 1, 2, ...
         cv::imshow(win_name.str(), colored[idx]);
         if (first_run)

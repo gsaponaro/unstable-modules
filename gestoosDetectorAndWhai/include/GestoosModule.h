@@ -24,6 +24,8 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/ResourceFinder.h>
 
+#include "GestoosSupport.h"
+
 using namespace yarp::os;
 
 class GestoosModule : public RFModule
@@ -44,6 +46,7 @@ private:
 
     std::vector<int> labels;
     std::vector<double> thresholds;
+    idNameMap nameContainer;
 
     // variables to visualize score maps
     std::vector<cv::Mat> sm;
