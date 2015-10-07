@@ -251,10 +251,15 @@ bool GestoosModule::updateModule()
         cv::imshow(win_name.str(), colored[idx]);
         if (first_run)
         {
-            cv::moveWindow(win_name.str(), 1600, 260*(1+idx));
-            first_run = false;
+            int new_x, new_y, win_height_incl_spacing;
+            new_x = depth_map.cols * 1.2;
+            win_height_incl_spacing = depth_map.rows * 1.1;
+            new_y = win_height_incl_spacing * idx;
+            cv::moveWindow(win_name.str(), new_x, new_y);
         }
     }
+    if (first_run)
+        first_run = false;
 
     // show (filtered) depth map
     detector.visualize();
