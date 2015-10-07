@@ -1,7 +1,7 @@
 #include "GestoosModule.h"
 #include "GestoosSupport.h"
 
-// Rendering function called by the render thread
+// rendering function called by the render thread
 void render_func(const cv::Mat &depth_map, gestoos::tracking::WHAITracker *tracker)
 {
     if (depth_map.cols == 0)
@@ -155,17 +155,9 @@ bool GestoosModule::updateModule()
         mask(gestoos::crop_to_image(roi, mask)) = cv::Scalar(255);
     }
 
-    /*
-     * Still gesture detector
-     */
+    // still gesture detector
 
-    //detector.process(); // input from RGBD sensor
     detector.process(depth_map); // input from filtered hand tracker map
-
-    //detector.set_depth_limits(300.0, 3500.0);
-    //double minDepth, maxDepth;
-    //detector.min_max_depth(minDepth, maxDepth); // forced 800, 3500 !?
-    //std::cout << "minDepth=" << minDepth << " maxDepth=" << maxDepth << std::endl;
 
     //dumpScoreMapProbabilities(0); // negative class
     //dumpScoreMapProbabilities(1);
@@ -210,24 +202,6 @@ bool GestoosModule::updateModule()
                       &winnerPoint // location of maximum
                       // mask
                       );
-
-        /*
-        std::cout << "*** winner: ";
-        if (winnerGesture.id==1)
-            std::cout << "CLOSE";
-        else if (winnerGesture.id==2)
-            std::cout << "VICTORY";
-        else if (winnerGesture.id==3)
-            std::cout << "TEE";
-        else if (winnerGesture.id==4)
-            std::cout << "SILENCE";
-
-        std::cout << " id=" << winnerGesture.id
-                  << " score=" << winnerScore
-                  << " x=" << winnerPoint.x
-                  << " y=" << winnerPoint.y
-                  << " z=" << winnerGesture.z << std::endl;
-        */
 
         yarp::os::Bottle &out = outScorePort.prepare();
         out.clear();
