@@ -13,7 +13,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Gestoos)
 
 # OpenCV 3
-find_package(OpenCV 3.0 PATHS /home/g/NOBACKUP/opencv-3.0.0/build)
+find_package(OpenCV 3.0
+             PATHS /home/gsaponaro/software/opencv-3.0.0/build /home/g/NOBACKUP/opencv-3.0.0/build)
 #message (STATUS "OpenCV ${OpenCV_VERSION} found, libraries ${OpenCV_LIBS}, include directories ${OpenCV_INCLUDE_DIRS}")
 message (STATUS "OpenCV ${OpenCV_VERSION} found")
 
