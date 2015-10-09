@@ -12,7 +12,6 @@
 #include <fezoolib/Core/DepthGeometry.hpp>
 #include <fezoolib/Core/Serialization.hpp>
 #include <fezoolib/Core/Timestamp.hpp>
-#include <fezoolib/Core/ToolConfig.hpp>
 #include <fezoolib/Core/Visualization.hpp>
 #include <fezoolib/Detection/GestureDetector.hpp>
 #include <fezoolib/Tracking/WHAITracker.hpp>
@@ -33,8 +32,10 @@ class GestoosModule : public RFModule
 private:
     // yarp
     std::string moduleName;
-    std::string outScorePortName;
-    BufferedPort<Bottle> outScorePort;
+    std::string outHandsPortName;
+    std::string outGesturesPortName;
+    BufferedPort<Bottle> outHandsPort;
+    BufferedPort<Bottle> outGesturesPort;
     bool useMultithreading;
     bool useMotionDetection;
     int samplingStride;

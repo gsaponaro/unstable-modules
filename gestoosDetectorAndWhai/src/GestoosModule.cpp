@@ -52,8 +52,10 @@ bool GestoosModule::configure(ResourceFinder &rf)
         rf.check("useMotionDetection",Value("on")).asString()=="on"?true:false;
     samplingStride = rf.check("samplingStride", Value(4)).asInt();
     yarp::os::RFModule::setName(moduleName.c_str());
-    outScorePortName = "/" + moduleName + "/gesture:o";
-    outScorePort.open(outScorePortName);
+    outHandsPortName = "/" + moduleName + "/hands:o";
+    outHandsPort.open(outHandsPortName);
+    outGesturesPortName = "/" + moduleName + "/gestures:o";
+    outGesturesPort.open(outGesturesPortName);
 
     if (useMultithreading)
         yInfo("multithreading on");
@@ -107,13 +109,15 @@ bool GestoosModule::configure(ResourceFinder &rf)
 
 bool GestoosModule::interruptModule()
 {
-    outScorePort.interrupt();
+    outHandsPort.interrupt();
+    outGesturesPort.interrupt();
     return true;
 }
 
 bool GestoosModule::close()
 {
-    outScorePort.close();
+    outHandsPort.close();
+    outGesturesPort.close();
     return true;
 }
 
@@ -139,6 +143,8 @@ bool GestoosModule::updateModule()
 
     // get hand positions
     std::vector<gestoos::tracking::ObjectTrack*> objects = whai.active_tracks();
+
+    // prepare mask with rectangles over hand regions
     cv::Mat mask;
     mask.create(cv::Size(depth_map.cols,  // normally 320
                          depth_map.rows), // normally 240
@@ -152,21 +158,57 @@ bool GestoosModule::updateModule()
         //double score = objects[i]->get_score();
         //std::cout << "hand score=" << score;
 
-        cv::Point2f p = objects[i]->get_position_2d();
+        cv::Point2f p2d = objects[i]->get_position_2d();
 
         //std::cout << " pos2d=" << p.x << "," << p.y;
         //cv::Point3f p3d = objects[i]->get_position();
         //std::cout << " pos3d=" << p3d.x << "," << p3d.y << "," << p3d.z << std::endl;
 
-        roi.x = p.x-15;
-        roi.y = p.y-15;
+        roi.x = p2d.x-15;
+        roi.y = p2d.y-15;
         //Set local neighbourhood to 255 to apply gesture detection on these regions
         mask(gestoos::crop_to_image(roi, mask)) = cv::Scalar(255);
     }
 
+    // write to yarp hands:o port
+    yarp::os::Bottle &bHands = outHandsPort.prepare();
+    bHands.clear();
+    for (int i=0; i < objects.size(); ++i)
+    {
+        int id = objects[i]->get_id();
+        //cv::Point2f p2d = objects[i]->get_position_2d();
+        cv::Point3f p3d = objects[i]->get_position();
+        //int depth = objects[i]->get_depth();
+        double score = objects[i]->get_score();
+
+        // skip if zero score
+        if (score<=0.0)
+            continue;
+
+        yarp::os::Bottle &h = bHands.addList();
+
+        yarp::os::Bottle &bid = h.addList();
+        bid.addString("id");
+        bid.addInt(id);
+
+        yarp::os::Bottle &bcoords = h.addList();
+        bcoords.addString("coords");
+        yarp::os::Bottle &bcoordscontent = bcoords.addList();
+        bcoordscontent.addDouble(p3d.x);
+        bcoordscontent.addDouble(p3d.y);
+        bcoordscontent.addDouble(p3d.z);
+
+        yarp::os::Bottle &bscore = h.addList();
+        bscore.addString("score");
+        bscore.addDouble(score);
+    }
+    if (bHands.size()>0)
+        outHandsPort.write();
+
     // still gesture detector
 
-    detector.process(depth_map); // input from filtered hand tracker map
+    detector.process(depth_map);
+    //detector.process(depth_map, mask); // restrict to hand region
 
     //dumpScoreMapProbabilities(0); // negative class
     //dumpScoreMapProbabilities(1);
@@ -198,8 +240,9 @@ bool GestoosModule::updateModule()
         }
     }
 
-    yarp::os::Bottle &out = outScorePort.prepare();
-    out.clear();
+    // write to yarp gestures:o port
+    yarp::os::Bottle &bGest = outGesturesPort.prepare();
+    bGest.clear();
     for (std::vector<cv::Mat>::const_iterator i = sm.begin();
          i != sm.end();
          ++i)
@@ -216,15 +259,34 @@ bool GestoosModule::updateModule()
                       );
         double z = 0.0;
         z = static_cast<double>(depth_map.at<unsigned short>(point));
-        yarp::os::Bottle &gest = out.addList();
-        gest.addInt(labels[idx]);
-        gest.addString(nameContainer[labels[idx]]);
-        gest.addDouble(score);
-        gest.addDouble(static_cast<double>(point.x));
-        gest.addDouble(static_cast<double>(point.y));
-        gest.addDouble(z);
+
+        // skip if zero score
+        if (score<=0.0)
+            continue;
+
+        yarp::os::Bottle &g = bGest.addList();
+
+        yarp::os::Bottle &bid = g.addList();
+        bid.addString("id");
+        bid.addInt(labels[idx]);
+
+        yarp::os::Bottle &bname = g.addList();
+        bname.addString("name");
+        bname.addString(nameContainer[labels[idx]]);
+
+        yarp::os::Bottle &bscore = g.addList();
+        bscore.addString("score");
+        bscore.addDouble(score);
+
+        yarp::os::Bottle &bcoords = g.addList();
+        bcoords.addString("coords");
+        yarp::os::Bottle &bcoordscontent = bcoords.addList();
+        bcoordscontent.addDouble(static_cast<double>(point.x));
+        bcoordscontent.addDouble(static_cast<double>(point.y));
+        bcoordscontent.addDouble(z);
     }
-    outScorePort.write();
+    if (bGest.size()>0)
+        outGesturesPort.write();
 
     // actual visualization
     for (std::vector<int>::const_iterator i = labels.begin();
