@@ -198,28 +198,6 @@ bool GestoosModule::updateModule()
         }
     }
 
-/*
-    gestoos::detection::GestureDetector::GestureTraits winnerGesture;
-    winnerGesture = detector.get_gesture();
-    if (winnerGesture.id > 0)
-    {
-        double winnerScore = 0.0;
-        cv::Point winnerPoint;
-        cv::minMaxLoc(sm[winnerGesture.id-1], // prob. map
-                      NULL, // minimum value
-                      &winnerScore, // maximum value
-                      NULL, // location of minimum
-                      &winnerPoint // location of maximum
-                      // mask
-                      );
-        yDebug("*** depth around peak ***");
-        std::cout << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y-1,winnerPoint.x+1) << std::endl;
-        std::cout << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y,winnerPoint.x+1) << std::endl;
-        std::cout << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x-1) << " " << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x) << " " << depth_map.at<uchar>(winnerPoint.y+1,winnerPoint.x+1) << std::endl;
-        yDebug("***");
-    }
-    */
-
     yarp::os::Bottle &out = outScorePort.prepare();
     out.clear();
     for (std::vector<cv::Mat>::const_iterator i = sm.begin();
@@ -237,14 +215,14 @@ bool GestoosModule::updateModule()
                       // mask
                       );
         double z = 0.0;
-        z = static_cast<double>(depth_map.at<uchar>(point));
+        z = static_cast<double>(depth_map.at<unsigned short>(point));
         yarp::os::Bottle &gest = out.addList();
-        gest.addInt( labels[idx] );
-        gest.addString( nameContainer[labels[idx]] );
+        gest.addInt(labels[idx]);
+        gest.addString(nameContainer[labels[idx]]);
         gest.addDouble(score);
-        gest.addDouble( static_cast<double>(point.x) );
-        gest.addDouble( static_cast<double>(point.y) );
-        gest.addDouble( z );
+        gest.addDouble(static_cast<double>(point.x));
+        gest.addDouble(static_cast<double>(point.y));
+        gest.addDouble(z);
     }
     outScorePort.write();
 
