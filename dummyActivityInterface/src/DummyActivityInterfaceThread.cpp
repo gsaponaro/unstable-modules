@@ -9,6 +9,9 @@
 
 #include "DummyActivityInterfaceThread.h"
 
+using namespace std;
+using namespace yarp::os;
+
 /**********************************************************/
 DummyActivityInterfaceThread::DummyActivityInterfaceThread(
     const string &_moduleName,

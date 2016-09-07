@@ -9,6 +9,9 @@
 
 #include "DummyActivityInterfaceModule.h"
 
+using namespace std;
+using namespace yarp::os;
+
 bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
 {
     // module parameters

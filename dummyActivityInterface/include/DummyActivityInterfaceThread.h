@@ -27,17 +27,14 @@
 # endif
 #endif
 
-using namespace std;
-using namespace yarp::os;
-
-class DummyActivityInterfaceThread : public RateThread
+class DummyActivityInterfaceThread : public yarp::os::RateThread
 {
     private:
-        string moduleName;
+        std::string moduleName;
         bool closing;
 
     public:
-        DummyActivityInterfaceThread(const string &_moduleName,
+        DummyActivityInterfaceThread(const std::string &_moduleName,
                                      const double _period);
         bool openPorts();
         void close();
@@ -48,21 +45,21 @@ class DummyActivityInterfaceThread : public RateThread
         void mainProcessing();
 
         // IDL functions
-        bool askForTool(const string &handName, const int32_t xpos, const int32_t ypos);
-        bool drop(const string &objName);
-        Bottle get2D(const string &objName);
-        string getLabel(const int32_t xpos, const int32_t ypos);
-        Bottle getNames();
+        bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
+        bool drop(const std::string &objName);
+        yarp::os::Bottle get2D(const std::string &objName);
+        std::string getLabel(const int32_t xpos, const int32_t ypos);
+        yarp::os::Bottle getNames();
         bool goHome();
-        bool handStat(const string &handName);
-        string inHand(const std::string &objName);
-        bool pull(const string &objName, const string &toolName);
-        Bottle pullableWith(const string &objName);
-        bool push(const string &objName, const string &toolName);
-        bool put(const string &objName, const string &targetName);
-        Bottle reachableWith(const string &objName);
-        bool take(const string &objName, const string &handName);
-        Bottle underOf(const string &objName);
+        bool handStat(const std::string &handName);
+        std::string inHand(const std::string &objName);
+        bool pull(const std::string &objName, const std::string &toolName);
+        yarp::os::Bottle pullableWith(const std::string &objName);
+        bool push(const std::string &objName, const std::string &toolName);
+        bool put(const std::string &objName, const std::string &targetName);
+        yarp::os::Bottle reachableWith(const std::string &objName);
+        bool take(const std::string &objName, const std::string &handName);
+        yarp::os::Bottle underOf(const std::string &objName);
 };
 
 #endif

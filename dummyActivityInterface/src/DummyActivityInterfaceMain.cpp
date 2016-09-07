@@ -12,6 +12,8 @@
 
 #include "DummyActivityInterfaceModule.h"
 
+using namespace yarp::os;
+
 int main(int argc, char *argv[])
 {
     Network yarp;
