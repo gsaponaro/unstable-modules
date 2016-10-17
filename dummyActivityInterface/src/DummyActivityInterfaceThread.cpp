@@ -59,13 +59,25 @@ bool DummyActivityInterfaceThread::threadInit()
         return false;
     }
 
+    // parse ini file
     if (rf.check("objects_list"))
     {
-        objs = * rf.find("objects_list").asList();
-        if (objs.isNull() || objs.size()<1)
+        objNames = * rf.find("objects_list").asList();
+        if (objNames.isNull() || objNames.size()<1)
             yError("problem with objects_list");
         else
-            yInfo("objects_list: %s", objs.toString().c_str());
+        {
+            yInfo("objects_list: %s", objNames.toString().c_str());
+
+            for (int o=0; o<objNames.size(); ++o)
+            {
+                const string name = objNames.get(o).asString();
+                if (! rf.findGroup("OBJECTS").check(name))
+                {
+                    yError("did not find %s in OBJECTS group", name.c_str());
+                }
+            }
+        }
     }
     else
         yError("did not find objects_list");
@@ -106,6 +118,14 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 {
     Bottle position2D;
 
+    if (rf.findGroup("OBJECTS").check(objName) &&
+        rf.findGroup("OBJECTS").find(objName).asList()->check("position_2d_left"))
+    {
+        position2D = * rf.findGroup("OBJECTS").find(objName).asList()->find("position_2d_left").asList();
+    }
+    else
+        yError("problem parsing 2D position of %s", objName.c_str());
+
     return position2D;
 }
 
@@ -117,9 +137,7 @@ string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
 
 Bottle DummyActivityInterfaceThread::getNames()
 {
-    Bottle names;
-
-    return names;
+    return objNames;
 }
 
 bool DummyActivityInterfaceThread::goHome()

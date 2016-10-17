@@ -35,7 +35,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::ResourceFinder rf;
         bool closing;
 
-        yarp::os::Bottle objs;
+        yarp::os::Bottle objNames;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
