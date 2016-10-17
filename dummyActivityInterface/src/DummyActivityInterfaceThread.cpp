@@ -15,9 +15,10 @@ using namespace yarp::os;
 /**********************************************************/
 DummyActivityInterfaceThread::DummyActivityInterfaceThread(
     const string &_moduleName,
-    const double _period)
-    : moduleName(_moduleName),
-      RateThread(int(_period*1000.0))
+    ResourceFinder &_rf)
+    : RateThread(33), // [ms]
+      moduleName(_moduleName),
+      rf(_rf)
 {
 }
 
@@ -57,6 +58,17 @@ bool DummyActivityInterfaceThread::threadInit()
         yError("problem opening ports");
         return false;
     }
+
+    if (rf.check("objects_list"))
+    {
+        objs = * rf.find("objects_list").asList();
+        if (objs.isNull() || objs.size()<1)
+            yError("problem with objects_list");
+        else
+            yInfo("objects_list: %s", objs.toString().c_str());
+    }
+    else
+        yError("did not find objects_list");
 
     return true;
 }

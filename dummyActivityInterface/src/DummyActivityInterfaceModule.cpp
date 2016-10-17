@@ -27,9 +27,9 @@ bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
     // thread stuff
     threadPeriod = 0.033; // [s]
 
-    // create new thread and pass pointers to the module parameters
+    // create new thread, pass parameters with ResourceFinder
     thread = new DummyActivityInterfaceThread(moduleName,
-                                              threadPeriod);
+                                              rf);
 
     // start the thread to do the work
     if (!thread->start())

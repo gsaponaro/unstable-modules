@@ -16,6 +16,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/RateThread.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Time.h>
 
 // make sure __func__ is set correctly, http://stackoverflow.com/a/17528983
@@ -31,11 +32,14 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 {
     private:
         std::string moduleName;
+        yarp::os::ResourceFinder rf;
         bool closing;
+
+        yarp::os::Bottle objs;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
-                                     const double _period);
+                                     yarp::os::ResourceFinder &_rf);
         bool openPorts();
         void close();
         void interrupt();
