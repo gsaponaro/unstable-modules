@@ -7,6 +7,9 @@
  *
  */
 
+#include <algorithm>
+#include <vector>
+
 #include "DummyActivityInterfaceThread.h"
 
 using namespace std;
@@ -101,16 +104,88 @@ void DummyActivityInterfaceThread::mainProcessing()
         return;
 }
 
+Bottle DummyActivityInterfaceThread::getToolLikeNames()
+{
+    Bottle toolLikeNames;
+
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        if (objNames.get(o).asString() == "Rake" ||
+            objNames.get(o).asString() == "Stick")
+        {
+            toolLikeNames.addString(objNames.get(o).asString().c_str());
+        }
+    }
+
+    return toolLikeNames;
+}
+
 // IDL functions
 bool DummyActivityInterfaceThread::askForTool(const string &handName,
                                               const int32_t xpos,
                                               const int32_t ypos)
 {
+    // requested object
+    string label = getLabel(xpos, ypos);
+
+    if (label.empty())
+    {
+        yInfo("I cannot see anything at the position %d %d", xpos, ypos);
+        return false;
+    }
+
+    yInfo("tato (take tool)");
+
+    //update inHandStatus map
+    inHandStatus.insert(pair<string, string>(label.c_str(), handName.c_str()));
+
+    if (availableTools.size()<1)
+    {
+        availableTools.push_back(label.c_str());
+        yInfo("[askForTool] adding %s to list", label.c_str());
+    }
+    else
+    {
+        if (std::find(availableTools.begin(), availableTools.end(), label/*.c_str()*/) == availableTools.end())
+        {
+            yInfo("[askForTool] name %s not available", label.c_str());
+            yInfo("[askForTool] adding it to list");
+            availableTools.push_back(label.c_str());
+        }
+    }
+
     return true;
 }
 
 bool DummyActivityInterfaceThread::drop(const string &objName)
 {
+    string handName = inHand(objName);
+
+    if (handName == "none")
+    {
+        yInfo("cannot drop %s because it is not in my hands", objName.c_str());
+    }
+
+    yInfo("OK, I will drop the %s", objName.c_str());
+    // do the drop action probabilistically
+    bool success = true;
+    if (success)
+    {
+        // update inHandStatus map
+        for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+             it!=inHandStatus.end();
+             ++it)
+        {
+            if (it->first == objName)
+            {
+                inHandStatus.erase(objName.c_str());
+                break;
+            }
+        }
+    }
+
+    yInfo("dropped %s", objName.c_str());
+
     return true;
 }
 
@@ -190,12 +265,41 @@ bool DummyActivityInterfaceThread::goHome()
 
 bool DummyActivityInterfaceThread::handStat(const string &handName)
 {
-    return true;
+    if (handName != "left" && handName != "right")
+    {
+        yError("hand name %s not recognized: must be left or right", handName.c_str());
+        return false;
+    }
+
+    bool handIsFull = false;
+
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        const string handStatus = inHand(objNames.get(o).asString());
+        if (handStatus == "left" || handStatus == "right")
+        {
+            handIsFull = true;
+        }
+    }
+
+    return handIsFull;
 }
 
 string DummyActivityInterfaceThread::inHand(const std::string &objName)
 {
-    return "none";
+    string handName;
+    
+    for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+         it!=inHandStatus.end();
+         ++it)
+    {
+        if (it->first == objName)
+            handName = it->second.c_str();
+    }
+    if (handName.empty())
+        handName = "none";
+        
+    return handName;
 }
 
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
@@ -217,6 +321,56 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 
 bool DummyActivityInterfaceThread::put(const string &objName, const string &targetName)
 {
+    yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
+
+    string handName = inHand(objName);
+
+    if (handName == "none")
+    {
+        yInfo("cannot put %s on %s because I do not have %s in my hands",
+              objName.c_str(), targetName.c_str(), objName.c_str());
+
+        return false;
+    }
+
+    Bottle position = get3D(targetName);
+    if (position.size()>0)
+    {
+        yInfo("OK, I will put %s on %s", objName.c_str(), targetName.c_str());
+
+        Bottle under = underOf(targetName.c_str());
+
+        // do the put action probabilistically
+        bool success = true;
+        if (success)
+        {
+            // update onTopElements and inHandStatus
+            if (!targetName.empty())
+            {
+                if (elements == 0)
+                {
+                    onTopElements.insert(pair<int, string>(elements, targetName.c_str()));
+                    elements++;
+                }
+                onTopElements.insert(pair<int, string>(elements, objName.c_str()));
+                elements++;
+            }
+            
+            for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+                 it!=inHandStatus.end();
+                 ++it)
+            {
+                if (it->first == objName)
+                {
+                    inHandStatus.erase(objName.c_str());
+                    break;
+                }
+            }
+        }
+    }
+
+    yInfo("finished putting %s on %s", objName.c_str(), targetName.c_str());
+
     return true;
 }
 
@@ -229,6 +383,35 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 
 bool DummyActivityInterfaceThread::take(const string &objName, const string &handName)
 {
+    if (handName != "left" && handName != "right")
+    {
+        yError("hand name %s not recognized: must be left or right", handName.c_str());
+        return false;
+    }
+
+    yInfo("trying to take %s with %s", objName.c_str(), handName.c_str());
+
+    //check for hand status beforehand to make sure that it is empty
+    string handStatus = inHand(objName);
+
+    if (handStatus != "none")
+    {
+        yInfo("cannot take %s with %s because %s is full",
+              objName.c_str(), handName.c_str(), handName.c_str());
+
+        return false;
+    }
+
+    // do the take action probabilistically
+    bool success = true;
+    if (success)
+    {
+        // update inHandStatus map
+        inHandStatus.insert(pair<string, string>(objName.c_str(), handName.c_str()));
+    }
+
+    yInfo("took %s with %s", objName.c_str(), handName.c_str());
+
     return true;
 }
 

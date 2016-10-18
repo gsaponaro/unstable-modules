@@ -11,6 +11,7 @@
 #define DUMMY_ACTIVITY_INTERFACE_THREAD_H
 
 #include <iostream> // __func__
+#include <map>
 #include <string>
 
 #include <yarp/os/Bottle.h>
@@ -36,6 +37,10 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         bool closing;
 
         yarp::os::Bottle objNames;
+        std::map<std::string, std::string> inHandStatus;
+        std::map<int, std::string> onTopElements;
+        std::vector<std::string> availableTools;
+        int elements;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
@@ -47,6 +52,8 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         void run();
 
         void mainProcessing();
+
+        yarp::os::Bottle getToolLikeNames();
 
         // IDL functions
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
