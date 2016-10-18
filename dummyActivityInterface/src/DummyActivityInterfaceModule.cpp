@@ -97,6 +97,11 @@ Bottle DummyActivityInterfaceModule::get2D(const string &objName)
     return thread->get2D(objName);
 }
 
+Bottle DummyActivityInterfaceModule::get3D(const string &objName)
+{
+    return thread->get3D(objName);
+}
+
 string DummyActivityInterfaceModule::getLabel(const int32_t xpos, const int32_t ypos)
 {
     return thread->getLabel(xpos, ypos);

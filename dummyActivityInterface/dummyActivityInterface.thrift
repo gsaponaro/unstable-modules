@@ -38,6 +38,13 @@ service DummyActivityInterface_IDL
   Bottle get2D(1:string objName);
 
   /**
+  * Get the 3D position of the object requested by the user.
+  * @param objName specifies the name of the object
+  * @return Bottle containing 3D position
+  **/
+  Bottle get3D(1:string objName);
+
+  /**
   *Get the label of the object located in the vicinity of xpos and ypos
   * @param xpos specifies the 2D position of the object on the X axis
   * @param ypos specifies the 2D position of the object on the Y axis

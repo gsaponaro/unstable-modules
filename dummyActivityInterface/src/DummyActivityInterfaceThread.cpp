@@ -129,6 +129,21 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
     return position2D;
 }
 
+Bottle DummyActivityInterfaceThread::get3D(const string &objName)
+{
+    Bottle position3D;
+
+    if (rf.findGroup("OBJECTS").check(objName) &&
+        rf.findGroup("OBJECTS").find(objName).asList()->check("position_3d"))
+    {
+        position3D = * rf.findGroup("OBJECTS").find(objName).asList()->find("position_3d").asList();
+    }
+    else
+        yError("problem parsing 3D position of %s", objName.c_str());
+
+    return position3D;
+}
+
 string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
                                               const int32_t ypos)
 {
