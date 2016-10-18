@@ -132,7 +132,35 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
                                               const int32_t ypos)
 {
-    return "test";
+    string label;
+    Bottle positionBBox;
+
+    Bottle objs = rf.findGroup("OBJECTS");
+
+    for (int i=0; i<objs.size(); ++i)
+    {
+        if (Bottle *entry = objs.get(i).asList())
+        {
+            string entryName = entry->get(0).asString();
+            if (Bottle *propField = entry->get(1).asList())
+            {
+                if (propField->check("position_2d_left"))
+                {
+                    Bottle *propFieldPos = propField->find("position_2d_left").asList();
+                    if (propFieldPos->get(0).asDouble() < xpos &&
+                        xpos < propFieldPos->get(2).asDouble() &&
+                        propFieldPos->get(1).asDouble() < ypos &&
+                        ypos < propFieldPos->get(3).asDouble())
+                    {
+                        label = entryName;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return label;
 }
 
 Bottle DummyActivityInterfaceThread::getNames()
