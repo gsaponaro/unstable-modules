@@ -85,6 +85,8 @@ bool DummyActivityInterfaceThread::threadInit()
     else
         yError("did not find objects_list");
 
+    elements = 0;
+
     return true;
 }
 
@@ -118,6 +120,36 @@ Bottle DummyActivityInterfaceThread::getToolLikeNames()
     }
 
     return toolLikeNames;
+}
+
+Bottle DummyActivityInterfaceThread::queryUnderOf(const std::string &objName)
+{
+    Bottle replyList;
+    replyList.clear();
+
+    int id = -1;
+
+    for (std::map<int, string>::reverse_iterator rit = onTopElements.rbegin();
+         rit != onTopElements.rend();
+         ++rit)
+    {
+        if (objName == rit->second)
+            id = rit->first;
+    }
+
+    for (std::map<int, string>::reverse_iterator rit = onTopElements.rbegin();
+         rit != onTopElements.rend();
+         ++rit)
+    {
+        if ((objName.c_str() != rit->second) &&
+            id >= 0 &&
+            rit->first <= id)
+        {
+            replyList.addString(rit->second.c_str());
+        }
+    }
+
+    return replyList;
 }
 
 // IDL functions
@@ -173,7 +205,7 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
     {
         // update inHandStatus map
         for (std::map<string, string>::const_iterator it = inHandStatus.begin();
-             it!=inHandStatus.end();
+             it != inHandStatus.end();
              ++it)
         {
             if (it->first == objName)
@@ -290,7 +322,7 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
     string handName;
     
     for (std::map<string, string>::const_iterator it = inHandStatus.begin();
-         it!=inHandStatus.end();
+         it != inHandStatus.end();
          ++it)
     {
         if (it->first == objName)
@@ -304,18 +336,101 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
 
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
 {
+    yInfo("trying to pull %s with %s", objName.c_str(), toolName.c_str());
+
+    string handName = inHand(toolName);
+    if (handName == "none")
+    {
+        yInfo("cannot pull %s with %s because I do not have %s in my hands",
+              objName.c_str(), toolName.c_str(), toolName.c_str());
+
+        return false;
+    }
+
+    /*
+    Bottle initPos2D = get2D(objName);
+    if (initPos2D.size()<1)
+    {
+        yError("problem parsing 2D position of %s", objName.c_str());
+        return false;
+    }
+
+    Bottle initPos3D = get3D(objName);
+    if (initPos3D.size()<1)
+    {
+        yError("problem parsing 3D position of %s", objName.c_str());
+        return false;
+    }
+    */
+
+    // do the pull action probabilistically
+    bool success = true;
+    if (success)
+    {
+        yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
+    }
+
     return true;
 }
 
 Bottle DummyActivityInterfaceThread::pullableWith(const string &objName)
 {
-    Bottle replyList;
+    bool valid = false;
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        const string name = objNames.get(o).asString();
+        if (objName == name)
+        {
+            valid = true;
+        }
+    }
 
-    return replyList;
+    if (!valid)
+    {
+        yError("invalid object name %s", objName.c_str());
+        Bottle empty;
+        return empty;
+    }
+
+    return getToolLikeNames();
 }
 
 bool DummyActivityInterfaceThread::push(const string &objName, const string &toolName)
 {
+    yInfo("trying to push %s with %s", objName.c_str(), toolName.c_str());
+
+    string handName = inHand(toolName);
+    if (handName == "none")
+    {
+        yInfo("cannot push %s with %s because I do not have %s in my hands",
+              objName.c_str(), toolName.c_str(), toolName.c_str());
+
+        return false;
+    }
+
+    /*
+    Bottle initPos2D = get2D(objName);
+    if (initPos2D.size()<1)
+    {
+        yError("problem parsing 2D position of %s", objName.c_str());
+        return false;
+    }
+
+    Bottle initPos3D = get3D(objName);
+    if (initPos3D.size()<1)
+    {
+        yError("problem parsing 3D position of %s", objName.c_str());
+        return false;
+    }
+    */
+
+    // do the push action probabilistically
+    bool success = true;
+    if (success)
+    {
+        yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
+    }
+
     return true;
 }
 
@@ -324,7 +439,6 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
     yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
 
     string handName = inHand(objName);
-
     if (handName == "none")
     {
         yInfo("cannot put %s on %s because I do not have %s in my hands",
@@ -332,6 +446,19 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
 
         return false;
     }
+
+    /*
+    bool useStackedObjs = false;
+    for (std::map<string, int>::const_iterator it = stackedObject.begin();
+         it != stackedObject.end();
+         ++it)
+    {
+        if (it->first == targetName)
+        {
+            useStackedObjs = true;
+        }
+    }
+    */
 
     Bottle position = get3D(targetName);
     if (position.size()>0)
@@ -344,20 +471,25 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         bool success = true;
         if (success)
         {
-            // update onTopElements and inHandStatus
+            // update onTopElements
             if (!targetName.empty())
             {
                 if (elements == 0)
                 {
+                    yDebug("elements is %d, adding <%d,%s>", elements, elements, targetName.c_str());
                     onTopElements.insert(pair<int, string>(elements, targetName.c_str()));
                     elements++;
+                    yDebug("elements is %d", elements);
                 }
+                yDebug("adding <%d,%s>", elements, objName.c_str());
                 onTopElements.insert(pair<int, string>(elements, objName.c_str()));
                 elements++;
+                yDebug("elements is %d, onTopElements has size %lu", elements, onTopElements.size());
             }
-            
+
+            // update inHandStatus
             for (std::map<string, string>::const_iterator it = inHandStatus.begin();
-                 it!=inHandStatus.end();
+                 it != inHandStatus.end();
                  ++it)
             {
                 if (it->first == objName)
@@ -377,6 +509,114 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
 Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 {
     Bottle replyList;
+
+    bool valid = false;
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        const string name = objNames.get(o).asString();
+        if (objName == name)
+        {
+            valid = true;
+        }
+    }
+
+    if (!valid)
+    {
+        yError("invalid object name %s", objName.c_str());
+        return replyList;
+    }
+
+    Bottle pos3D = get3D(objName);
+    if (pos3D.size()<1)
+    {
+        yError("problem parsing 3D position of %s", objName.c_str());
+    }
+    else
+    {
+        const double xThresh = -0.48;
+        if (pos3D.get(0).asDouble() < xThresh)
+        {
+            // in threshold
+
+            Bottle list = pullableWith(objName);
+            for (int i=0; i<list.size(); ++i)
+                replyList.addString(list.get(i).asString());
+
+            // check if tool is in left hand
+            if (handStat("left"))
+            {
+                for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+                     it != inHandStatus.end();
+                     ++it)
+                {
+                    if (it->second == "left")
+                        replyList.addString(it->first.c_str());
+                }
+            }
+
+            // check if tool is in right hand
+            if (handStat("right"))
+            {
+                for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+                     it != inHandStatus.end();
+                     ++it)
+                {
+                    if (it->second == "right")
+                        replyList.addString(it->first.c_str());
+                }
+            }
+        }
+        else
+        {
+            // out of threshold
+
+            Bottle list = getNames();
+
+            for (int i=0; i<list.size(); ++i)
+            {
+                if (objName != list.get(i).asString())
+                {
+                    replyList.addString(list.get(i).asString());
+                }
+            }
+
+            // check if tool is in left hand
+            if (handStat("left"))
+            {
+                for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+                     it != inHandStatus.end();
+                     ++it)
+                {
+                    if (it->second == "left")
+                        replyList.addString(it->first.c_str());
+                }
+            }
+
+            // check if tool is in right hand
+            if (handStat("right"))
+            {
+                for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+                     it != inHandStatus.end();
+                     ++it)
+                {
+                    if (it->second == "right")
+                        replyList.addString(it->first.c_str());
+                }
+            }
+
+            const double yThreshLeft  = -0.15;
+            const double yThreshRight =  0.15;
+            if (pos3D.get(1).asDouble() < yThreshLeft)
+                replyList.addString("left");
+            else if (pos3D.get(1).asDouble() > yThreshRight)
+                replyList.addString("right");
+            else
+            {
+                replyList.addString("left");
+                replyList.addString("right");
+            }
+        }
+    }
 
     return replyList;
 }
@@ -406,6 +646,20 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
     bool success = true;
     if (success)
     {
+        // if classifyObserve
+        // update underOf
+        for (std::map<int, string>::const_iterator it = onTopElements.begin();
+             it != onTopElements.end();
+             ++it)
+        {
+            if (it->second == objName.c_str())
+            {
+                int id = it->first;
+                onTopElements.erase(id);
+                elements--;
+            }
+        }
+
         // update inHandStatus map
         inHandStatus.insert(pair<string, string>(objName.c_str(), handName.c_str()));
     }
@@ -417,7 +671,88 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
 
 Bottle DummyActivityInterfaceThread::underOf(const string &objName)
 {
-    Bottle replyList;
+    bool valid = false;
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        const string name = objNames.get(o).asString();
+        if (objName == name)
+        {
+            valid = true;
+        }
+    }
 
-    return replyList;
+    if (!valid)
+    {
+        yError("invalid object name %s", objName.c_str());
+        Bottle empty;
+        return empty;
+    }
+
+    Bottle underOfObjects = queryUnderOf(objName);
+    yDebug("first underOfObjects: %s", underOfObjects.toString().c_str());
+
+
+
+    Bottle visibleObjects;
+    for (int o=0; o<objNames.size(); ++o)
+    {
+        bool shouldAdd = true;
+
+        // remove objects in hand
+        const string handStatus = inHand(objNames.get(o).asString());
+        if ((handStatus == "left") ||
+            (handStatus == "right"))
+        {
+            shouldAdd = false;
+        }
+
+        // remove invisible objects
+        for (int u=0; u<underOfObjects.size(); ++u)
+        {
+            if (underOfObjects.get(u).asString() == objNames.get(o).asString())
+            {
+                shouldAdd = false;
+            }
+        }
+
+        if (shouldAdd)
+        {
+            yDebug("adding %s to visibleObjects", objNames.get(o).asString().c_str());
+            visibleObjects.addString(objNames.get(o).asString());
+        }
+        else
+            yDebug("NOT adding %s to visibleObjects", objNames.get(o).asString().c_str());
+    }
+    yDebug("visibleObjects: %s", visibleObjects.toString().c_str());
+
+    for (int i=0; i<underOfObjects.size(); ++i)
+    {
+        for (int ii=0; ii<visibleObjects.size(); ++ii)
+        {
+            if (underOfObjects.get(i).asString() == visibleObjects.get(ii).asString())
+            {
+                for (std::map<int, string>::const_iterator it = onTopElements.begin();
+                     it != onTopElements.end();
+                     ++it)
+                {
+                    //yDebug("does %s equal %s?", it->second.c_str(), objName.c_str());
+                    if (it->second == objName)
+                    {
+                        //yDebug("yes");
+                        onTopElements.erase(it->first);
+                        // elements-- ?
+                        break;
+                    }
+                    //else
+                    //    yDebug("no");
+                }
+            }
+        }
+    }
+
+    underOfObjects.clear();
+    underOfObjects = queryUnderOf(objName);
+    yDebug("second underOfObjects: %s", underOfObjects.toString().c_str());
+
+    return underOfObjects;
 }

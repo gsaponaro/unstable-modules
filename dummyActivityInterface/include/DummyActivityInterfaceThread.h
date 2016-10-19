@@ -54,6 +54,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         void mainProcessing();
 
         yarp::os::Bottle getToolLikeNames();
+        yarp::os::Bottle queryUnderOf(const std::string &objName);
 
         // IDL functions
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
