@@ -31,7 +31,7 @@ source_group("Header Files" FILES ${header})
 include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME}) ${source}) ${header} ${PROJECT_NAME}.thrift ${IDL_GEN_FILES})
+add_executable(${PROJECT_NAME} ${source} ${header} ${PROJECT_NAME}.thrift ${IDL_GEN_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
