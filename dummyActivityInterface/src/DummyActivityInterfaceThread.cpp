@@ -276,7 +276,7 @@ bool DummyActivityInterfaceThread::handStat(const string &handName)
     for (int o=0; o<objNames.size(); ++o)
     {
         const string handStatus = inHand(objNames.get(o).asString());
-        if (handStatus == "left" || handStatus == "right")
+        if (handStatus == handName)
         {
             handIsFull = true;
         }
