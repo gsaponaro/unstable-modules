@@ -10,18 +10,17 @@ project(dummyActivityInterface)
 
 find_package(YARP)
 find_package(ICUBcontrib)
-
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
 include(YarpIDL)
-set(IDL_GENERATED_CODE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-yarp_idl_to_dir(${PROJECT_NAME}.thrift ${IDL_GENERATED_CODE_DIR})
-
 include(YarpInstallationHelpers)
 include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
+
 icubcontrib_set_default_prefix()
+
+yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
 
 file(GLOB source src/*.cpp)
 file(GLOB header include/*.h)
@@ -30,12 +29,10 @@ source_group("Source Files" FILES ${source})
 source_group("Header Files" FILES ${header})
 
 include_directories(${PROJECT_SOURCE_DIR}/include
-                    ${YARP_INCLUDE_DIRS}
-                    ${IDL_GENERATED_CODE_DIR}/include
-                   )
+                    ${YARP_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} ${source} ${header})
+add_executable(${PROJECT_NAME}) ${source}) ${header} ${PROJECT_NAME}.thrift ${IDL_GEN_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
-install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+yarp_install(TARGETS ${PROJECT_NAME} DESTINATION bin)
