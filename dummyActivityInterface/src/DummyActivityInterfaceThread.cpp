@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <yarp/os/Vocab.h>
-
 #include "DummyActivityInterfaceThread.h"
 
 using namespace std;
@@ -90,13 +88,23 @@ void DummyActivityInterfaceThread::mainProcessing()
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::getMemoryBottle()
 {
+    if (! memoryConnected())
+    {
+        Bottle empty;
+        return empty;
+    }
+
     Bottle memoryReply;
     Bottle cmdMemory;
     Bottle replyMemory;
     Bottle replyMemoryProp;
+    memoryReply.clear();
+    cmdMemory.clear();
+    replyMemory.clear();
+    replyMemoryProp.clear();
 
     cmdMemory.addVocab(Vocab::encode("ask"));
-    Bottle &cont=cmdMemory.addList().addList();
+    Bottle &cont = cmdMemory.addList().addList();
     cont.addString("entity");
     cont.addString("==");
     cont.addString("object");
@@ -164,6 +172,94 @@ Bottle DummyActivityInterfaceThread::getToolLikeNames()
 }
 
 /**********************************************************/
+bool DummyActivityInterfaceThread::memoryConnected()
+{
+    return (rpcMemory.getOutputCount() > 0);
+}
+
+/**********************************************************/
+int DummyActivityInterfaceThread::name2id(const std::string &objName)
+{
+    int id = -1;
+
+    if (! memoryConnected())
+    {
+        return id;
+    }
+
+    Bottle memoryReply;
+    Bottle cmdMemory;
+    Bottle replyMemory;
+    Bottle replyMemoryProp;
+
+    cmdMemory.addVocab(Vocab::encode("ask"));
+    Bottle &cont = cmdMemory.addList().addList();
+    cont.addString("name");
+    cont.addString("==");
+    cont.addString(objName);
+    rpcMemory.write(cmdMemory,replyMemory);
+
+    // valid reply: [ack] (id (11))
+    // invalid reply: [ack] (id ())
+    bool valid = replyMemory.size()>1 &&
+                 replyMemory.get(0).asVocab()==Vocab::encode("ack") &&
+                 replyMemory.get(1).isList() &&
+                 replyMemory.get(1).asList()->size()==2 &&
+                 replyMemory.get(1).asList()->get(0)=="id" &&
+                 replyMemory.get(1).asList()->get(1).isList() &&
+                 replyMemory.get(1).asList()->get(1).asList()->size()>0; // the important condition
+
+    if (valid)
+        id = replyMemory.get(1).asList()->get(1).asList()->get(0).asInt();
+    else
+        yWarning("did not find ID for %s", objName.c_str());
+
+    return id;
+}
+
+/**********************************************************/
+bool DummyActivityInterfaceThread::setObjProperty(const std::string &objName,
+                                                  const std::string &prop,
+                                                  const yarp::os::Bottle &v)
+{
+    if (! validateName(objName))
+        return false;
+
+    Bottle opcCmd;
+    Bottle opcCmdContent;
+    Bottle opcReply;
+
+    // [set] (("id" <num>) ("prop0" <val0>) ...)
+    opcCmd.clear();
+    opcCmdContent.clear();
+    opcReply.clear();
+    opcCmd.addVocab(Vocab::encode("set"));
+
+    Bottle bID;
+    bID.clear();
+    bID.addString("id");
+    bID.addInt(name2id(objName));
+    opcCmdContent.addList() = bID;
+
+    Bottle bPropAndValue;
+    bPropAndValue.addString(prop);
+    bPropAndValue.addList() = v;
+    opcCmdContent.addList() = bPropAndValue;
+    opcCmd.addList() = opcCmdContent;
+
+    //LockGuard lg(mutex);
+
+    //yDebug() << __func__ << "sending command to OPC:" << opcCmd.toString().c_str();
+    rpcMemory.write(opcCmd, opcReply);
+    //yDebug() << __func__ << "received response:" << opcReply.toString().c_str();
+
+    bool valid = opcReply.size()>0 &&
+                 opcReply.get(0).asVocab()==Vocab::encode("ack");
+
+    return valid;
+}
+
+/**********************************************************/
 bool DummyActivityInterfaceThread::validate2D(const string &objName)
 {
     Bottle pos2D = get2D(objName);
@@ -205,7 +301,7 @@ bool DummyActivityInterfaceThread::validateName(const string &objName)
     }
 
     if (!valid)
-        yError("invalid object name %s", objName.c_str());
+        yWarning("invalid object name %s", objName.c_str());
 
     return valid;
 }
@@ -264,14 +360,14 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     if (availableTools.size()<1)
     {
         availableTools.push_back(label.c_str());
-        yInfo("[askForTool] adding %s to list", label.c_str());
+        yDebug() << __func__ << "adding" << label.c_str() << "to list";
     }
     else
     {
         if (std::find(availableTools.begin(), availableTools.end(), label/*.c_str()*/) == availableTools.end())
         {
-            yInfo("[askForTool] name %s not available", label.c_str());
-            yInfo("[askForTool] adding it to list");
+            yDebug() << __func__ << "name" << label.c_str() << "not available";
+            yDebug() << __func__ << "adding it to list";
             availableTools.push_back(label.c_str());
         }
     }
@@ -315,6 +411,12 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 {
+    if (! memoryConnected())
+    {
+        Bottle empty;
+        return empty;
+    }
+
     Bottle memory = getMemoryBottle();
     Bottle position2D;
 
@@ -346,6 +448,12 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::get3D(const string &objName)
 {
+    if (! memoryConnected())
+    {
+        Bottle empty;
+        return empty;
+    }
+
     Bottle memory = getMemoryBottle();
     Bottle position3D;
 
@@ -378,8 +486,14 @@ Bottle DummyActivityInterfaceThread::get3D(const string &objName)
 string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
                                               const int32_t ypos)
 {
-    Bottle memory = getMemoryBottle();
     string label;
+
+    if (! memoryConnected())
+    {
+        return label;
+    }
+
+    Bottle memory = getMemoryBottle();
 
     for (int i=0; i<memory.size(); ++i)
     {
@@ -407,22 +521,32 @@ string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::getNames()
 {
-    Bottle memory = getMemoryBottle();
     Bottle names;
-    
+
+    if (! memoryConnected())
+    {
+        return names;
+    }
+
+    Bottle memory = getMemoryBottle();
+
     for (int i=0; i<memory.size(); ++i)
     {
         if (Bottle *propField = memory.get(i).asList())
         {
+            yDebug("%s", propField->toString().c_str());
             if (propField->check("position_2d_left"))
             {
                 if (propField->check("name"))
                 {
+                    yDebug("adding the name of %s to names=%s", propField->find("name").asString().c_str(), names.toString().c_str());
                     names.addString(propField->find("name").asString());
+                    yDebug("now names=%s", names.toString().c_str());
                 }
             }
         }
     }
+
     return names;
 }
 
@@ -477,6 +601,11 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
 {
+    if (! memoryConnected())
+    {
+        return false;
+    }
+
     yInfo("trying to pull %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -498,6 +627,15 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
     bool success = true;
     if (success)
     {
+        Bottle initPos3D = get3D(objName);
+        Bottle finPos3D;
+        const double displacementX = 0.10;
+        finPos3D.addDouble(initPos3D.get(0).asDouble() - displacementX);
+        finPos3D.addDouble(initPos3D.get(1).asDouble());
+        finPos3D.addDouble(initPos3D.get(2).asDouble());
+
+        setObjProperty(objName, "position_3d", finPos3D);
+
         yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
     }
 
@@ -521,6 +659,11 @@ Bottle DummyActivityInterfaceThread::pullableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::push(const string &objName, const string &toolName)
 {
+    if (! memoryConnected())
+    {
+        return false;
+    }
+
     yInfo("trying to push %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -542,6 +685,15 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
     bool success = true;
     if (success)
     {
+        Bottle initPos3D = get3D(objName);
+        Bottle finPos3D;
+        const double displacementX = 0.10;
+        finPos3D.addDouble(initPos3D.get(0).asDouble() + displacementX);
+        finPos3D.addDouble(initPos3D.get(1).asDouble());
+        finPos3D.addDouble(initPos3D.get(2).asDouble());
+
+        setObjProperty(objName, "position_3d", finPos3D);
+
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
     }
 
@@ -551,6 +703,11 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 /**********************************************************/
 bool DummyActivityInterfaceThread::put(const string &objName, const string &targetName)
 {
+    if (! memoryConnected())
+    {
+        return false;
+    }
+
     yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
 
     string handName = inHand(objName);

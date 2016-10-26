@@ -15,11 +15,15 @@
 #include <string>
 
 #include <yarp/os/Bottle.h>
+//#include <yarp/os/LockGuard.h>
 #include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
+//#include <yarp/os/Mutex.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/Vocab.h>
 
 // make sure __func__ is set correctly, http://stackoverflow.com/a/17528983
 #if __STDC_VERSION__ < 199901L
@@ -42,7 +46,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::vector<std::string> availableTools;
         int elements;
         yarp::os::RpcClient rpcMemory;
-
+        //yarp::os::Mutex mutex;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
@@ -57,7 +61,10 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 
         yarp::os::Bottle getMemoryBottle();
         yarp::os::Bottle getToolLikeNames();
+        bool memoryConnected();
+        int name2id(const std::string &objName);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
+        bool setObjProperty(const std::string &objName, const std::string &prop, const yarp::os::Bottle &v);
         bool validate2D(const std::string &objName);
         bool validate3D(const std::string &objName);
         bool validateName(const std::string &objName);
