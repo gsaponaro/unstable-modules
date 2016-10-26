@@ -18,6 +18,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
+#include <yarp/os/RpcClient.h>
 #include <yarp/os/Time.h>
 
 // make sure __func__ is set correctly, http://stackoverflow.com/a/17528983
@@ -36,11 +37,12 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::ResourceFinder rf;
         bool closing;
 
-        yarp::os::Bottle objNames;
         std::map<std::string, std::string> inHandStatus;
         std::map<int, std::string> onTopElements;
         std::vector<std::string> availableTools;
         int elements;
+        yarp::os::RpcClient rpcMemory;
+
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
@@ -53,8 +55,12 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 
         void mainProcessing();
 
+        yarp::os::Bottle getMemoryBottle();
         yarp::os::Bottle getToolLikeNames();
         yarp::os::Bottle queryUnderOf(const std::string &objName);
+        bool validate2D(const std::string &objName);
+        bool validate3D(const std::string &objName);
+        bool validateName(const std::string &objName);
 
         // IDL functions
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
