@@ -3,6 +3,8 @@
 #                Instituto Superior Técnico, Universidade de Lisboa, Lisbon, Portugal
 # Authors: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
+#
+# Based on activityInterface by Vadim Tikhanoff
 
 cmake_minimum_required(VERSION 2.6)
 

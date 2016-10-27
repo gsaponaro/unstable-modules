@@ -5,6 +5,8 @@
  * Author: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
  *
+ * Based on activityInterface by Vadim Tikhanoff
+ *
  */
 
 #ifndef DUMMY_ACTIVITY_INTERFACE_THREAD_H
