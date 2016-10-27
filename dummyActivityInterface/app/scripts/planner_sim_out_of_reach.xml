@@ -14,7 +14,7 @@
     <name>dummyActivityInterface</name>
     <workdir>/usr/local/src/robot/gsaponaro-unstable_modules/dummyActivityInterface/app/conf</workdir>
     <!--<workdir>/home/gsaponaro/NOBACKUP/unstable-modules/dummyActivityInterface/app/conf</workdir>-->
-    <parameters>--name activityInterface --from out_of_reach.ini</parameters>
+    <parameters>--name activityInterface</parameters>
     <node>localhost</node>
 </module>
 <module>
