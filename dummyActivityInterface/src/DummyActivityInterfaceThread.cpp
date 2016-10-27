@@ -110,8 +110,12 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
     cont.addString("entity");
     cont.addString("==");
     cont.addString("object");
+
+    LockGuard lg(mutex);
+    //yDebug() << __func__ << "sending command to OPC:" << cmdMemory.toString().c_str();
     rpcMemory.write(cmdMemory,replyMemory);
-    
+    //yDebug() << __func__ << "received response:" << replyMemory.toString().c_str();
+
     if (replyMemory.get(0).asVocab() == Vocab::encode("ack"))
     {
         if (Bottle *idField = replyMemory.get(1).asList())
@@ -123,6 +127,7 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
                 {
                     int id = idValues->get(i).asInt();
 
+                    /*
                     Bottle cmdTime;
                     Bottle cmdReply;
                     cmdTime.addVocab(Vocab::encode("time"));
@@ -130,23 +135,28 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
                     Bottle &list_tmp = contmp.addList();
                     list_tmp.addString("id");
                     list_tmp.addInt(id);
+                    //yDebug() << __func__ << "sending command to OPC:" << cmdTime.toString().c_str();
                     rpcMemory.write(cmdTime,cmdReply);
+                    //yDebug() << __func__ << "received response:" << cmdReply.toString().c_str();
 
                     Bottle *timePassed = cmdReply.get(1).asList();
                     double time = timePassed->get(0).asDouble();
+                    */
 
-                    if (time < 1.0)
-                    {
-                        cmdMemory.clear();
-                        cmdMemory.addVocab(Vocab::encode("get"));
-                        Bottle &content = cmdMemory.addList();
-                        Bottle &list_bid = content.addList();
-                        list_bid.addString("id");
-                        list_bid.addInt(id);
-                        rpcMemory.write(cmdMemory,replyMemoryProp);
+                    //if (time < 1.0)
+                    //{
+                    cmdMemory.clear();
+                    cmdMemory.addVocab(Vocab::encode("get"));
+                    Bottle &content = cmdMemory.addList();
+                    Bottle &list_bid = content.addList();
+                    list_bid.addString("id");
+                    list_bid.addInt(id);
+                    //yDebug() << __func__ << "sending command to OPC:" << cmdMemory.toString().c_str();
+                    rpcMemory.write(cmdMemory,replyMemoryProp);
+                    //yDebug() << __func__ << "received response:" << replyMemoryProp.toString().c_str();
 
-                        memoryReply.addList() = *replyMemoryProp.get(1).asList();
-                    }
+                    memoryReply.addList() = *replyMemoryProp.get(1).asList();
+                    //}
                 }
             }
         }
@@ -199,6 +209,8 @@ int DummyActivityInterfaceThread::name2id(const std::string &objName)
     cont.addString("name");
     cont.addString("==");
     cont.addString(objName);
+
+    LockGuard lg(mutex);
     rpcMemory.write(cmdMemory,replyMemory);
 
     // valid reply: [ack] (id (11))
@@ -249,8 +261,7 @@ bool DummyActivityInterfaceThread::setObjProperty(const std::string &objName,
     opcCmdContent.addList() = bPropAndValue;
     opcCmd.addList() = opcCmdContent;
 
-    //LockGuard lg(mutex);
-
+    LockGuard lg(mutex);
     //yDebug() << __func__ << "sending command to OPC:" << opcCmd.toString().c_str();
     rpcMemory.write(opcCmd, opcReply);
     //yDebug() << __func__ << "received response:" << opcReply.toString().c_str();
@@ -354,7 +365,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
         return false;
     }
 
-    yInfo("tato (take tool)");
+    yDebug("tato (take tool)");
 
     //update inHandStatus map
     inHandStatus.insert(pair<string, string>(label.c_str(), handName.c_str()));
@@ -531,19 +542,20 @@ Bottle DummyActivityInterfaceThread::getNames()
     }
 
     Bottle memory = getMemoryBottle();
+    //yDebug("%d entries, full memory: %s", memory.size(), memory.toString().c_str());
 
     for (int i=0; i<memory.size(); ++i)
     {
         if (Bottle *propField = memory.get(i).asList())
         {
-            yDebug("%s", propField->toString().c_str());
+            //yDebug("i=%d, %s", i, propField->toString().c_str());
             if (propField->check("position_2d_left"))
             {
                 if (propField->check("name"))
                 {
-                    yDebug("adding the name of %s to names=%s", propField->find("name").asString().c_str(), names.toString().c_str());
+                    //yDebug("adding the name of %s to names=%s", propField->find("name").asString().c_str(), names.toString().c_str());
                     names.addString(propField->find("name").asString());
-                    yDebug("now names=%s", names.toString().c_str());
+                    //yDebug("now names=%s", names.toString().c_str());
                 }
             }
         }

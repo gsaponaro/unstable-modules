@@ -17,10 +17,10 @@
 #include <string>
 
 #include <yarp/os/Bottle.h>
-//#include <yarp/os/LockGuard.h>
+#include <yarp/os/LockGuard.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-//#include <yarp/os/Mutex.h>
+#include <yarp/os/Mutex.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
@@ -48,7 +48,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::vector<std::string> availableTools;
         int elements;
         yarp::os::RpcClient rpcMemory;
-        //yarp::os::Mutex mutex;
+        yarp::os::Mutex mutex;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
