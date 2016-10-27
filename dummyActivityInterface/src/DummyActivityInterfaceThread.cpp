@@ -641,10 +641,20 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
     bool success = true;
     if (success)
     {
+        Bottle initPos2D = get2D(objName);
+        Bottle finPos2D;
+        const double displacement2D = 5.0;
+        finPos2D.addDouble(initPos2D.get(0).asDouble());
+        finPos2D.addDouble(initPos2D.get(1).asDouble() + displacement2D);
+        finPos2D.addDouble(initPos2D.get(2).asDouble());
+        finPos2D.addDouble(initPos2D.get(3).asDouble() + displacement2D);
+
+        setObjProperty(objName, "position_2d_left", finPos2D);
+
         Bottle initPos3D = get3D(objName);
         Bottle finPos3D;
-        const double displacementX = 0.10;
-        finPos3D.addDouble(initPos3D.get(0).asDouble() + displacementX);
+        const double displacement3D = 0.10;
+        finPos3D.addDouble(initPos3D.get(0).asDouble() + displacement3D);
         finPos3D.addDouble(initPos3D.get(1).asDouble());
         finPos3D.addDouble(initPos3D.get(2).asDouble());
 
@@ -699,10 +709,20 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
     bool success = true;
     if (success)
     {
+        Bottle initPos2D = get2D(objName);
+        Bottle finPos2D;
+        const double displacement2D = 5.0;
+        finPos2D.addDouble(initPos2D.get(0).asDouble());
+        finPos2D.addDouble(initPos2D.get(1).asDouble() - displacement2D);
+        finPos2D.addDouble(initPos2D.get(2).asDouble());
+        finPos2D.addDouble(initPos2D.get(3).asDouble() - displacement2D);
+
+        setObjProperty(objName, "position_2d_left", finPos2D);
+
         Bottle initPos3D = get3D(objName);
         Bottle finPos3D;
-        const double displacementX = 0.10;
-        finPos3D.addDouble(initPos3D.get(0).asDouble() - displacementX);
+        const double displacement3D = 0.10;
+        finPos3D.addDouble(initPos3D.get(0).asDouble() - displacement3D);
         finPos3D.addDouble(initPos3D.get(1).asDouble());
         finPos3D.addDouble(initPos3D.get(2).asDouble());
 
