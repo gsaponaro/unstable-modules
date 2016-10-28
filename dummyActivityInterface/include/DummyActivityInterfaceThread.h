@@ -68,7 +68,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::Bottle getMemoryBottle();
         yarp::os::Bottle getToolLikeNames();
         std::string holdIn(const std::string &handName);
-        bool memoryConnected();
+        bool isConnectedOutput(yarp::os::RpcClient &rpcClient);
         int name2id(const std::string &objName);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
         bool setObjProperty(const std::string &objName, const std::string &prop, const yarp::os::Bottle &v);

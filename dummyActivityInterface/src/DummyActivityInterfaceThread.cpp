@@ -100,8 +100,9 @@ void DummyActivityInterfaceThread::mainProcessing()
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::getMemoryBottle()
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         Bottle empty;
         return empty;
     }
@@ -213,9 +214,9 @@ string DummyActivityInterfaceThread::holdIn(const std::string &handName)
 }
 
 /**********************************************************/
-bool DummyActivityInterfaceThread::memoryConnected()
+bool DummyActivityInterfaceThread::isConnectedOutput(RpcClient &rpcClient)
 {
-    return (rpcMemory.getOutputCount() > 0);
+    return (rpcClient.getOutputCount() > 0);
 }
 
 /**********************************************************/
@@ -223,8 +224,9 @@ int DummyActivityInterfaceThread::name2id(const std::string &objName)
 {
     int id = -1;
 
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return id;
     }
 
@@ -421,13 +423,13 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 {
     Bottle empty;
-    if (rpcPrada.getOutputCount() <= 0)
+    if (! isConnectedOutput(rpcPrada))
     {
         yError("PRADA planner not connected");
         return empty;
     }
 
-    if (rpcPrada.getOutputCount() <= 0)
+    if (! isConnectedOutput(rpcPraxiconInterface))
     {
         yError("praxiconInterface not connected");
         return empty;
@@ -603,8 +605,9 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         Bottle empty;
         return empty;
     }
@@ -640,8 +643,9 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::get3D(const string &objName)
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         Bottle empty;
         return empty;
     }
@@ -680,8 +684,9 @@ string DummyActivityInterfaceThread::getLabel(const int32_t xpos,
 {
     string label;
 
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return label;
     }
 
@@ -715,8 +720,9 @@ Bottle DummyActivityInterfaceThread::getNames()
 {
     Bottle names;
 
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return names;
     }
 
@@ -795,8 +801,9 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return false;
     }
 
@@ -863,8 +870,9 @@ Bottle DummyActivityInterfaceThread::pullableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::push(const string &objName, const string &toolName)
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return false;
     }
 
@@ -917,8 +925,9 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 /**********************************************************/
 bool DummyActivityInterfaceThread::put(const string &objName, const string &targetName)
 {
-    if (! memoryConnected())
+    if (! isConnectedOutput(rpcMemory))
     {
+        yError("memory not connected");
         return false;
     }
 
