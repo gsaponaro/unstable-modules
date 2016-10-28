@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator for POETICON++</name>
+<name>Planner Simulator for POETICON++ Simple4</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>
