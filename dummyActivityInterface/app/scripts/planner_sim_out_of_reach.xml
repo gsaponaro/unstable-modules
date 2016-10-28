@@ -7,7 +7,7 @@
 
 <module>
     <name>lbpExtract</name>
-    <parameters>--radius 7 --maxArea 6000 --maxArcLength 600</parameters>
+    <parameters>--radius 1 --maxArea 6000 --maxArcLength 600 --topBound 30</parameters>
     <node>localhost</node>
 </module>
 <module>
