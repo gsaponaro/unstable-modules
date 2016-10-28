@@ -430,16 +430,15 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 {
     Bottle empty;
-    if (! isConnectedOutput(rpcPrada))
-    {
-        yError("PRADA planner not connected");
-        return empty;
-    }
-
     if (! isConnectedOutput(rpcPraxiconInterface))
     {
         yError("praxiconInterface not connected");
         return empty;
+    }
+
+    if (! isConnectedOutput(rpcPrada))
+    {
+        yError("PRADA planner not connected");
     }
 
     Bottle cmd;
@@ -472,7 +471,7 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
     string inHandLeft = holdIn("left");
     string inHandRight = holdIn("right");
 
-    yInfo() << __func__ << "tool names:" << toolLikeMemory.toString().c_str();
+    yInfo() << __func__ << "tool names (will be ignored by PRAXICON):" << toolLikeMemory.toString().c_str();
     yInfo() << __func__ << "object names:" << objectsMemory.toString().c_str();
 
     Bottle &listOfObjects = cmdPrax.addList();
@@ -509,18 +508,18 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 
     for (int i=1; i<listOfObjects.size(); ++i)
     {
-        yDebug("will check for the following objects %s", listOfObjects.get(i).asString().c_str());
+        //yDebug("will check for the following objects: %s", listOfObjects.get(i).asString().c_str());
         Bottle under = underOf(listOfObjects.get(i).asString().c_str());
-        yDebug("underOf size is %d", under.size());
+        //yDebug("underOf size is %d", under.size());
         if (under.size() > 0)
         {
             for (int ii=0; ii<under.size(); ++ii)
             {
-                yDebug("I have something under %s and it is %s", listOfObjects.get(i).asString().c_str(), under.get(ii).asString().c_str());
+                //yDebug("I have something under %s and it is %s", listOfObjects.get(i).asString().c_str(), under.get(ii).asString().c_str());
                 listOfObjects.addString(under.get(ii).asString().c_str());
             }
         }
-        yDebug("nothing under %s" , listOfObjects.get(i).asString().c_str());
+        //yDebug("nothing under %s" , listOfObjects.get(i).asString().c_str());
     }
 
     //create query list
@@ -564,6 +563,7 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
         }
 
         yInfo("Got a reply from the PRAXICON, will now think about it!");
+        yInfo("%s", listOfGoals.toString().c_str());
     }
     else
     {
@@ -984,15 +984,15 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
             {
                 if (elements == 0)
                 {
-                    yDebug("elements is %d, adding <%d,%s>", elements, elements, targetName.c_str());
+                    //yDebug("elements is %d, adding <%d,%s>", elements, elements, targetName.c_str());
                     onTopElements.insert(pair<int, string>(elements, targetName.c_str()));
                     elements++;
-                    yDebug("elements is %d", elements);
+                    //yDebug("elements is %d", elements);
                 }
-                yDebug("adding <%d,%s>", elements, objName.c_str());
+                //yDebug("adding <%d,%s>", elements, objName.c_str());
                 onTopElements.insert(pair<int, string>(elements, objName.c_str()));
                 elements++;
-                yDebug("elements is %d, onTopElements has size %lu", elements, onTopElements.size());
+                //yDebug("elements is %d, onTopElements has size %lu", elements, onTopElements.size());
             }
 
             // update inHandStatus
@@ -1173,9 +1173,7 @@ Bottle DummyActivityInterfaceThread::underOf(const string &objName)
     }
 
     Bottle underOfObjects = queryUnderOf(objName);
-    yDebug("first underOfObjects: %s", underOfObjects.toString().c_str());
-
-
+    //yDebug("first underOfObjects: %s", underOfObjects.toString().c_str());
 
     Bottle visibleObjects;
     /*
