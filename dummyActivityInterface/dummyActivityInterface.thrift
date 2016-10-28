@@ -24,6 +24,13 @@ service DummyActivityInterface_IDL
   bool askForTool(1:string handName, 2:i32 xpos, 3:i32 ypos);
 
   /**
+   * Get the speech instruction and send it to the PRAXICON
+   * @param request specifies the request to be asked to the PRAXICON
+   * @return Bottle containing list of goals to achieve
+   **/
+  Bottle askPraxicon(1:string request);
+
+  /**
   * Perform the drops action on the particular object with the particular hand
   * @param objName specifies the name of the object in question
   * @return true/false on droping or not

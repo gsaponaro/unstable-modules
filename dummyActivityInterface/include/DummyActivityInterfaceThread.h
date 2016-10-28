@@ -21,6 +21,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Mutex.h>
+#include <yarp/os/Port.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
@@ -48,6 +49,9 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::vector<std::string> availableTools;
         int elements;
         yarp::os::RpcClient rpcMemory;
+        yarp::os::RpcClient rpcPrada;
+        yarp::os::RpcClient rpcPraxiconInterface;
+        yarp::os::Port praxiconToPradaPort;
         yarp::os::Mutex mutex;
 
     public:
@@ -63,6 +67,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 
         yarp::os::Bottle getMemoryBottle();
         yarp::os::Bottle getToolLikeNames();
+        std::string holdIn(const std::string &handName);
         bool memoryConnected();
         int name2id(const std::string &objName);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
@@ -73,6 +78,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 
         // IDL functions
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
+        yarp::os::Bottle askPraxicon(const std::string &request);
         bool drop(const std::string &objName);
         yarp::os::Bottle get2D(const std::string &objName);
         yarp::os::Bottle get3D(const std::string &objName);

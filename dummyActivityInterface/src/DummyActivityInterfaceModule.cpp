@@ -89,6 +89,11 @@ bool DummyActivityInterfaceModule::askForTool(const string &handName,
     return thread->askForTool(handName, xpos, ypos);
 }
 
+Bottle DummyActivityInterfaceModule::askPraxicon(const string &request)
+{
+    return thread->askPraxicon(request);
+}
+
 bool DummyActivityInterfaceModule::drop(const string &objName)
 {
     return thread->drop(objName);
@@ -124,7 +129,7 @@ bool DummyActivityInterfaceModule::handStat(const string &handName)
     return thread->handStat(handName);
 }
 
-string DummyActivityInterfaceModule::inHand(const std::string &objName)
+string DummyActivityInterfaceModule::inHand(const string &objName)
 {
     return thread->inHand(objName);
 }

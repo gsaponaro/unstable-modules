@@ -10,6 +10,7 @@
  */
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 #include "DummyActivityInterfaceThread.h"
@@ -32,6 +33,9 @@ bool DummyActivityInterfaceThread::openPorts()
 {
     bool ret = true;
     ret = ret && rpcMemory.open(("/"+moduleName+"/memory:rpc").c_str());
+    ret = ret && rpcPrada.open(("/"+moduleName+"/prada:rpc").c_str());
+    ret = ret && rpcPraxiconInterface.open(("/"+moduleName+"/praxicon:rpc").c_str());
+    ret = ret && praxiconToPradaPort.open(("/"+moduleName+"/praxicon:o").c_str());
 
     return ret;
 }
@@ -41,6 +45,9 @@ void DummyActivityInterfaceThread::close()
 {
     yInfo("closing ports");
     rpcMemory.close();
+    rpcPrada.close();
+    rpcPraxiconInterface.close();
+    praxiconToPradaPort.close();
 
     return;
 }
@@ -51,6 +58,9 @@ void DummyActivityInterfaceThread::interrupt()
     closing = true;
     yInfo("interrupting ports");
     rpcMemory.interrupt();
+    rpcPrada.interrupt();
+    rpcPraxiconInterface.interrupt();
+    praxiconToPradaPort.interrupt();
 
     return;
 }
@@ -181,6 +191,25 @@ Bottle DummyActivityInterfaceThread::getToolLikeNames()
     }
 
     return toolLikeNames;
+}
+
+/**********************************************************/
+string DummyActivityInterfaceThread::holdIn(const std::string &handName)
+{
+    string object;
+
+    for (std::map<string, string>::const_iterator it = inHandStatus.begin();
+         it!=inHandStatus.end();
+         ++it)
+    {
+        if (it->second == handName)
+            object = it->first.c_str();
+    }
+
+    if (object.empty())
+        object = "none";
+
+    return object;
 }
 
 /**********************************************************/
@@ -386,6 +415,156 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     }
 
     return true;
+}
+
+/**********************************************************/
+Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
+{
+    Bottle empty;
+    if (rpcPrada.getOutputCount() <= 0)
+    {
+        yError("PRADA planner not connected");
+        return empty;
+    }
+
+    if (rpcPrada.getOutputCount() <= 0)
+    {
+        yError("praxiconInterface not connected");
+        return empty;
+    }
+
+    Bottle cmd;
+    Bottle reply;
+    cmd.clear();
+    reply.clear();
+    cmd.addString("stopPlanner");
+    rpcPrada.write(cmd, reply);
+
+    cmd.clear();
+    reply.clear();
+    cmd.addString("startPlanner");
+    rpcPrada.write(cmd, reply);
+
+    if (reply.get(0).asVocab() == Vocab::encode("ok"))
+    {
+        yInfo("Let's have a look at the scene!");
+    }
+
+    //praxiconRequest = request;
+
+    Bottle listOfGoals;
+    Bottle cmdPrax;
+    Bottle replyPrax;
+
+    yInfo() << __func__ << "request is:" << request.c_str();
+
+    Bottle toolLikeMemory = getToolLikeNames();
+    Bottle objectsMemory = getNames();
+    string inHandLeft = holdIn("left");
+    string inHandRight = holdIn("right");
+
+    yInfo() << __func__ << "tool names:" << toolLikeMemory.toString().c_str();
+    yInfo() << __func__ << "object names:" << objectsMemory.toString().c_str();
+
+    Bottle &listOfObjects = cmdPrax.addList();
+
+    //create available list
+    listOfObjects.addString("available");
+    int passed[toolLikeMemory.size()];
+    for (int i=0; i<objectsMemory.size(); ++i)
+    {
+        for (int x=0; x<toolLikeMemory.size(); ++x)
+            passed[x] = 0;
+
+        for (int ii=0; ii<toolLikeMemory.size(); ++ii)
+            if (objectsMemory.get(i).asString() != toolLikeMemory.get(ii).asString())
+                passed[ii] = 1;
+
+        int total=0;
+        for (int x=0; x<toolLikeMemory.size(); x++)
+            total += passed[x];
+
+        if (total == toolLikeMemory.size())
+            listOfObjects.addString(objectsMemory.get(i).asString().c_str());
+    }
+
+    if (inHandLeft != "none")
+        listOfObjects.addString(inHandLeft.c_str());
+
+    if (inHandRight != "none")
+        listOfObjects.addString(inHandRight.c_str());
+
+    //create missing list
+    Bottle &missing = cmdPrax.addList();
+    missing.addString("missing");
+
+    for (int i=1; i<listOfObjects.size(); ++i)
+    {
+        yDebug("will check for the following objects %s", listOfObjects.get(i).asString().c_str());
+        Bottle under = underOf(listOfObjects.get(i).asString().c_str());
+        yDebug("underOf size is %d", under.size());
+        if (under.size() > 0)
+        {
+            for (int ii=0; ii<under.size(); ++ii)
+            {
+                yDebug("I have something under %s and it is %s", listOfObjects.get(i).asString().c_str(), under.get(ii).asString().c_str());
+                listOfObjects.addString(under.get(ii).asString().c_str());
+            }
+        }
+        yDebug("nothing under %s" , listOfObjects.get(i).asString().c_str());
+    }
+
+    //create query list
+    Bottle &query = cmdPrax.addList();
+    query.addString("query");
+    query.addString(request.c_str());
+
+    yInfo("Let's query the PRAXICON! Sending query:");
+    yInfo("%s", cmdPrax.toString().c_str());
+    rpcPraxiconInterface.write(cmdPrax,replyPrax);
+
+    Bottle &tmpList = listOfGoals.addList();
+    //listOfGoals.clear();
+    vector<string> tokens;
+
+    if (replyPrax.size() > 0)
+    {
+        for (int i=0; i<replyPrax.size()-1; ++i) // -1 to remove (mouth speak goal from praxicon)
+        {
+            string replytmp = replyPrax.get(i).asString().c_str();
+            istringstream iss(replytmp);
+
+            std::copy(istream_iterator<string>(iss),
+                      istream_iterator<string>(),
+                      back_inserter(tokens));
+        }
+
+        tokens.push_back("endofstring"); // adding this to prevent missing the last goal or going out of range
+
+        int inc = 0;
+        Bottle tmp;
+        for (int i=0; i<tokens.size(); i++)
+        {
+            if (++inc == 4)
+            {
+                tmpList.addList() = tmp;
+                inc = 1;
+                tmp.clear();
+            }
+            tmp.addString(tokens[i].c_str());
+        }
+
+        yInfo("Got a reply from the PRAXICON, will now think about it!");
+    }
+    else
+    {
+        yError() << __func__ << "something went wrong with the request";
+        yInfo("something went terribly wrong. I cannot %s", request.c_str());
+    }
+
+    praxiconToPradaPort.write(listOfGoals);
+
+    return listOfGoals;
 }
 
 /**********************************************************/
@@ -598,7 +777,7 @@ bool DummyActivityInterfaceThread::handStat(const string &handName)
 string DummyActivityInterfaceThread::inHand(const std::string &objName)
 {
     string handName;
-    
+
     for (std::map<string, string>::const_iterator it = inHandStatus.begin();
          it != inHandStatus.end();
          ++it)
@@ -606,9 +785,10 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
         if (it->first == objName)
             handName = it->second.c_str();
     }
+
     if (handName.empty())
         handName = "none";
-        
+
     return handName;
 }
 

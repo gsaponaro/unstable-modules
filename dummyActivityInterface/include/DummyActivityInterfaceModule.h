@@ -44,6 +44,7 @@ class DummyActivityInterfaceModule : public yarp::os::RFModule,
         // IDL functions
         bool attach(yarp::os::RpcServer &source);
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
+        yarp::os::Bottle askPraxicon(const std::string &request);
         bool drop(const std::string &objName);
         yarp::os::Bottle get2D(const std::string &objName);
         yarp::os::Bottle get3D(const std::string &objName);

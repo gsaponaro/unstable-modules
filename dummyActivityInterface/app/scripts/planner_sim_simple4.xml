@@ -91,6 +91,10 @@
     <to>/dummyMemory/rpc</to>
 </connection>
 <connection>
+    <from>/activityInterface/prada:rpc</from>
+    <to>/planner/rpc:i</to>
+</connection>
+<connection>
     <from>/icub/camcalib/left/out</from>
     <to>/blobDescriptor/rawImg:i</to>
     <protocol>udp</protocol>
