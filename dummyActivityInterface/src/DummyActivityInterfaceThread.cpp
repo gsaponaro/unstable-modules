@@ -392,31 +392,38 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 
     if (label.empty())
     {
-        yInfo("I cannot see anything at the position %d %d", xpos, ypos);
+        yWarning("I cannot see anything at the position %d %d", xpos, ypos);
         return false;
     }
 
-    yDebug("tato (take tool)");
+    yInfo("Can you give me the %s, please?", label.c_str());
 
-    //update inHandStatus map
-    inHandStatus.insert(pair<string, string>(label.c_str(), handName.c_str()));
+    // grasp the tool with the help of the human probabilistically
+    bool success = true;
+    if (success)
+    {
+        //update inHandStatus map
+        inHandStatus.insert(pair<string, string>(label.c_str(), handName.c_str()));
 
-    if (availableTools.size()<1)
-    {
-        availableTools.push_back(label.c_str());
-        yDebug() << __func__ << "adding" << label.c_str() << "to list";
-    }
-    else
-    {
-        if (std::find(availableTools.begin(), availableTools.end(), label/*.c_str()*/) == availableTools.end())
+        if (availableTools.size()<1)
         {
-            yDebug() << __func__ << "name" << label.c_str() << "not available";
-            yDebug() << __func__ << "adding it to list";
             availableTools.push_back(label.c_str());
+            yDebug() << __func__ << "adding" << label.c_str() << "to list";
+        }
+        else
+        {
+            if (std::find(availableTools.begin(), availableTools.end(), label/*.c_str()*/) == availableTools.end())
+            {
+                yDebug() << __func__ << "name" << label.c_str() << "not available";
+                yDebug() << __func__ << "adding it to list";
+                availableTools.push_back(label.c_str());
+            }
         }
     }
 
-    return true;
+    yInfo("Thank you, I successfully grasped the %s", label.c_str());
+
+    return success;
 }
 
 /**********************************************************/
