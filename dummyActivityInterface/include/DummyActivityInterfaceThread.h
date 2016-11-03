@@ -52,6 +52,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::RpcClient rpcPrada;
         yarp::os::RpcClient rpcPraxiconInterface;
         yarp::os::Port praxiconToPradaPort;
+        //yarp::os::BufferedPort<yarp::os::Bottle> pradaInputPort;
         yarp::os::Mutex mutex;
 
     public:

@@ -36,6 +36,7 @@ bool DummyActivityInterfaceThread::openPorts()
     ret = ret && rpcPrada.open(("/"+moduleName+"/prada:rpc").c_str());
     ret = ret && rpcPraxiconInterface.open(("/"+moduleName+"/praxicon:rpc").c_str());
     ret = ret && praxiconToPradaPort.open(("/"+moduleName+"/praxicon:o").c_str());
+    //ret = ret && pradaInputPort.open(("/"+moduleName+"/prada:i").c_str());
 
     return ret;
 }
@@ -48,6 +49,7 @@ void DummyActivityInterfaceThread::close()
     rpcPrada.close();
     rpcPraxiconInterface.close();
     praxiconToPradaPort.close();
+    //pradaInputPort.close();
 
     return;
 }
@@ -61,6 +63,7 @@ void DummyActivityInterfaceThread::interrupt()
     rpcPrada.interrupt();
     rpcPraxiconInterface.interrupt();
     praxiconToPradaPort.interrupt();
+    //pradaInputPort.interrupt();
 
     return;
 }
