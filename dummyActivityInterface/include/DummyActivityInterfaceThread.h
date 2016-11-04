@@ -44,6 +44,17 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::ResourceFinder rf;
         bool closing;
 
+        double probability_grasp_tool_left;
+        double probability_grasp_tool_right;
+        double probability_perceive_grasp;
+        double probability_pull;
+        double probability_push;
+        double probability_put_left;
+        double probability_put_right;
+        double probability_take_left;
+        double probability_take_right;
+        double probability_vision_object;
+
         std::map<std::string, std::string> inHandStatus;
         std::map<int, std::string> onTopElements;
         std::vector<std::string> availableTools;
@@ -66,7 +77,9 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
 
         void mainProcessing();
 
+        void enforceProbabilityBounds(double &n);
         yarp::os::Bottle getMemoryBottle();
+        void getParameters();
         yarp::os::Bottle getToolLikeNames();
         std::string holdIn(const std::string &handName);
         bool isConnectedOutput(yarp::os::RpcClient &rpcClient);

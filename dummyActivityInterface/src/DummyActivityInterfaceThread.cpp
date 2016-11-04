@@ -73,6 +73,8 @@ bool DummyActivityInterfaceThread::threadInit()
 {
     closing = false;
 
+    getParameters();
+
     if ( !openPorts() )
     {
         yError("problem opening ports");
@@ -98,6 +100,27 @@ void DummyActivityInterfaceThread::mainProcessing()
 
     if (closing)
         return;
+}
+
+/**********************************************************/
+void DummyActivityInterfaceThread::enforceProbabilityBounds(double &n)
+{
+    const double LowerBound = 0.0;
+    const double UpperBound = 1.0;
+
+    if (n < LowerBound)
+    {
+        yWarning("invalid probability, setting to %f", LowerBound);
+        n = LowerBound;
+    }
+
+    if (n > UpperBound)
+    {
+        yWarning("invalid probability, setting to %f", UpperBound);
+        n = UpperBound;
+    }
+
+    return;
 }
 
 /**********************************************************/
@@ -178,6 +201,46 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
 
     return memoryReply;
 }
+
+/**********************************************************/
+void DummyActivityInterfaceThread::getParameters()
+{
+    probability_grasp_tool_left = rf.check("probability_grasp_tool_left",Value(1.0)).asDouble();
+    probability_grasp_tool_right = rf.check("probability_grasp_tool_right",Value(1.0)).asDouble();
+    probability_perceive_grasp = rf.check("probability_perceive_grasp",Value(1.0)).asDouble();
+    probability_pull = rf.check("probability_pull",Value(1.0)).asDouble();
+    probability_push = rf.check("probability_push",Value(1.0)).asDouble();
+    probability_put_left = rf.check("probability_put_left",Value(1.0)).asDouble();
+    probability_put_right = rf.check("probability_put_right",Value(1.0)).asDouble();
+    probability_take_left = rf.check("probability_take_left",Value(1.0)).asDouble();
+    probability_take_right = rf.check("probability_take_right",Value(1.0)).asDouble();
+    probability_vision_object = rf.check("probability_vision_object",Value(1.0)).asDouble();
+
+    enforceProbabilityBounds(probability_grasp_tool_left);
+    enforceProbabilityBounds(probability_grasp_tool_right);
+    enforceProbabilityBounds(probability_perceive_grasp);
+    enforceProbabilityBounds(probability_pull);
+    enforceProbabilityBounds(probability_push);
+    enforceProbabilityBounds(probability_put_left);
+    enforceProbabilityBounds(probability_put_right);
+    enforceProbabilityBounds(probability_take_left);
+    enforceProbabilityBounds(probability_take_right);
+    enforceProbabilityBounds(probability_vision_object);
+
+    yInfo("probability_grasp_tool_left: %f", probability_grasp_tool_left);
+    yInfo("probability_grasp_tool_right: %f", probability_grasp_tool_right);
+    yInfo("probability_perceive_grasp: %f", probability_perceive_grasp);
+    yInfo("probability_pull: %f", probability_pull);
+    yInfo("probability_push: %f", probability_push);
+    yInfo("probability_put_left: %f", probability_put_left);
+    yInfo("probability_put_right: %f", probability_put_right);
+    yInfo("probability_take_left: %f", probability_take_left);
+    yInfo("probability_take_right: %f", probability_take_right);
+    yInfo("probability_vision_object: %f", probability_vision_object);
+
+    return;
+}
+
 
 /**********************************************************/
 Bottle DummyActivityInterfaceThread::getToolLikeNames()
