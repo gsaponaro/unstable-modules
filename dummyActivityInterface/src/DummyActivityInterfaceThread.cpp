@@ -858,6 +858,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         setObjProperty(objName, "position_3d", finPos3D);
 
         yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
+        yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
 
     return true;
@@ -927,6 +928,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         setObjProperty(objName, "position_3d", finPos3D);
 
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
+        yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
 
     return true;
@@ -971,8 +973,10 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
     }
     */
 
-    Bottle position = get3D(targetName);
-    if (position.size()>0)
+    Bottle targetPos2D = get2D(targetName);
+
+    Bottle targetPos3D = get3D(targetName);
+    if (targetPos3D.size()>0)
     {
         yInfo("OK, I will put %s on %s", objName.c_str(), targetName.c_str());
 
@@ -982,6 +986,11 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         bool success = true;
         if (success)
         {
+            // update objName coordinates
+            setObjProperty(objName, "position_2d_left", targetPos2D);
+            setObjProperty(objName, "position_3d", targetPos3D);
+            yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), targetPos2D.toString().c_str(), targetPos3D.toString().c_str());
+
             // update onTopElements
             if (!targetName.empty())
             {
@@ -1112,7 +1121,6 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
             replyList.addString("right");
         }
     }
-
 
     return replyList;
 }
