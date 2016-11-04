@@ -63,6 +63,7 @@
 </module>
 <module>
     <name>goalCompiler</name>
+    <parameters>--goalSimplification off</parameters>
     <node>localhost</node>
 </module>
 <module>
