@@ -13,6 +13,9 @@
 #include <iterator>
 #include <vector>
 
+#include <yarp/math/Math.h>
+#include <yarp/math/Rand.h>
+
 #include "DummyActivityInterfaceThread.h"
 
 using namespace std;
@@ -74,6 +77,7 @@ bool DummyActivityInterfaceThread::threadInit()
     closing = false;
 
     getParameters();
+    yarp::math::Rand::init();
 
     if ( !openPorts() )
     {
@@ -464,7 +468,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 
     yInfo("Can you give me the %s, please?", label.c_str());
 
-    // grasp the tool with the help of the human probabilistically
+    // grasp the tool with the help of the human, probabilistically TODO
     bool success = true;
     if (success)
     {
@@ -898,7 +902,8 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         return false;
 
     // do the pull action probabilistically
-    bool success = true;
+    const double noise = yarp::math::Rand::scalar();
+    bool success = (noise < probability_pull);
     if (success)
     {
         Bottle initPos2D = get2D(objName);
@@ -923,8 +928,14 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
+    else
+    {
+        yWarning("I have failed to pull %s with %s because noise < threshold (%f < %f)",
+                 objName.c_str(), toolName.c_str(),
+                 noise, probability_pull);
+    }
 
-    return true;
+    return success;
 }
 
 /**********************************************************/
