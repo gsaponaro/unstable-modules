@@ -903,7 +903,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
 
     // do the pull action probabilistically
     const double noise = yarp::math::Rand::scalar();
-    bool success = (noise < probability_pull);
+    bool success = (noise <= probability_pull);
     if (success)
     {
         Bottle initPos2D = get2D(objName);
@@ -930,7 +930,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
     }
     else
     {
-        yWarning("I have failed to pull %s with %s because noise < threshold (%f < %f)",
+        yWarning("I have failed to pull %s with %s because noise > threshold (%f > %f)",
                  objName.c_str(), toolName.c_str(),
                  noise, probability_pull);
     }
