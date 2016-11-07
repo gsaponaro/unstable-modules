@@ -510,7 +510,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                  noise, probability_grasp_tool);
     }
 
-    return success;
+    return true;
 }
 
 /**********************************************************/
@@ -952,7 +952,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
                  noise, probability_pull);
     }
 
-    return success;
+    return true;
 }
 
 /**********************************************************/
@@ -1029,7 +1029,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
                  noise, probability_push);
     }
 
-    return success;
+    return true;
 }
 
 /**********************************************************/
@@ -1132,7 +1132,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         }
     }
 
-    return success;
+    return true;
 }
 
 /**********************************************************/
@@ -1291,7 +1291,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
                  noise, probability_take);
     }
 
-    return success;
+    return true;
 }
 
 /**********************************************************/
