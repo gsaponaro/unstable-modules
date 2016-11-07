@@ -466,10 +466,21 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
         return false;
     }
 
+    if (handName != "left" && handName != "right")
+    {
+        yError("hand name %s not recognized: must be left or right", handName.c_str());
+        return false;
+    }
+
+    // save the left/right success threshold for this action
+    const double probability_grasp_tool =
+        (handName=="left" ? probability_grasp_tool_left : probability_grasp_tool_right);
+
     yInfo("Can you give me the %s, please?", label.c_str());
 
-    // grasp the tool with the help of the human, probabilistically TODO
-    bool success = true;
+    // grasp the tool with the help of the human, probabilistically
+    const double noise = yarp::math::Rand::scalar();
+    bool success = (noise <= probability_grasp_tool);
     if (success)
     {
         //update inHandStatus map
@@ -489,9 +500,13 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                 availableTools.push_back(label.c_str());
             }
         }
-    }
 
-    yInfo("Thank you, I successfully grasped the %s", label.c_str());
+        yInfo("Thank you, I successfully grasped the %s", label.c_str());
+    }
+    else
+        yWarning("I have failed to grasp the tool %s with the %s hand because noise > threshold (%f > %f)",
+                 label.c_str(), handName.c_str(),
+                 noise, probability_grasp_tool);
 
     return success;
 }
@@ -979,7 +994,8 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         return false;
 
     // do the push action probabilistically
-    bool success = true;
+    const double noise = yarp::math::Rand::scalar();
+    bool success = (noise <= probability_push);
     if (success)
     {
         Bottle initPos2D = get2D(objName);
@@ -1004,8 +1020,13 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
+    {
+        yWarning("I have failed to push %s with %s because noise > threshold (%f > %f)",
+                 objName.c_str(), toolName.c_str(),
+                 noise, probability_push);
+    }
 
-    return true;
+    return success;
 }
 
 /**********************************************************/
@@ -1028,6 +1049,10 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         return false;
     }
 
+    // save the left/right success threshold for this action
+    const double probability_put =
+        (handName=="left" ? probability_put_left : probability_put_right);
+
     if (! validate2D(targetName))
         return false;
 
@@ -1047,8 +1072,8 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
     }
     */
 
+    bool success = false;
     Bottle targetPos2D = get2D(targetName);
-
     Bottle targetPos3D = get3D(targetName);
     if (targetPos3D.size()>0)
     {
@@ -1057,7 +1082,8 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         Bottle under = underOf(targetName.c_str());
 
         // do the put action probabilistically
-        bool success = true;
+        const double noise = yarp::math::Rand::scalar();
+        success = (noise <= probability_put);
         if (success)
         {
             // update objName coordinates
@@ -1092,12 +1118,18 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
                     break;
                 }
             }
+
+            yInfo("successfully put %s on %s", objName.c_str(), targetName.c_str());
+        }
+        else
+        {
+            yWarning("I have failed to put %s on %s with the %s hand because noise > threshold (%f > %f)",
+                     objName.c_str(), targetName.c_str(), handName.c_str(),
+                     noise, probability_put);
         }
     }
 
-    yInfo("finished putting %s on %s", objName.c_str(), targetName.c_str());
-
-    return true;
+    return success;
 }
 
 /**********************************************************/
@@ -1221,8 +1253,13 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         return false;
     }
 
+    // save the left/right success threshold for this action
+    const double probability_take =
+        (handName=="left" ? probability_take_left : probability_take_right);
+
     // do the take action probabilistically
-    bool success = true;
+    const double noise = yarp::math::Rand::scalar();
+    bool success = (noise <= probability_take);
     if (success)
     {
         // if classifyObserve
@@ -1241,11 +1278,16 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
 
         // update inHandStatus map
         inHandStatus.insert(pair<string, string>(objName.c_str(), handName.c_str()));
+
+        yInfo("successfully took %s with %s", objName.c_str(), handName.c_str());
+    }
+    {
+        yWarning("I have failed to take %s with %s because noise > threshold (%f > %f)",
+                 objName.c_str(), handName.c_str(),
+                 noise, probability_take);
     }
 
-    yInfo("took %s with %s", objName.c_str(), handName.c_str());
-
-    return true;
+    return success;
 }
 
 /**********************************************************/
