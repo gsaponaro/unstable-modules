@@ -504,9 +504,11 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
         yInfo("Thank you, I successfully grasped the %s", label.c_str());
     }
     else
+    {
         yWarning("I have failed to grasp the tool %s with the %s hand because noise > threshold (%f > %f)",
                  label.c_str(), handName.c_str(),
                  noise, probability_grasp_tool);
+    }
 
     return success;
 }
@@ -1020,6 +1022,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
+    else
     {
         yWarning("I have failed to push %s with %s because noise > threshold (%f > %f)",
                  objName.c_str(), toolName.c_str(),
@@ -1281,6 +1284,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
 
         yInfo("successfully took %s with %s", objName.c_str(), handName.c_str());
     }
+    else
     {
         yWarning("I have failed to take %s with %s because noise > threshold (%f > %f)",
                  objName.c_str(), handName.c_str(),
