@@ -37,4 +37,6 @@ add_executable(${PROJECT_NAME} ${source} ${header} ${PROJECT_NAME}.thrift ${IDL_
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
+add_subdirectory(app)
+
 yarp_install(TARGETS ${PROJECT_NAME} DESTINATION bin)

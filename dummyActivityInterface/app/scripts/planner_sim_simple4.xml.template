@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator for POETICON++ Out of Reach</name>
+<name>Planner Simulator for POETICON++ Simple4</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>
@@ -7,7 +7,7 @@
 
 <module>
     <name>lbpExtract</name>
-    <parameters>--radius 1 --maxArea 6000 --maxArcLength 600 --topBound 30</parameters>
+    <parameters>--radius 7 --maxArea 6000 --maxArcLength 600</parameters>
     <node>localhost</node>
 </module>
 <module>
@@ -17,9 +17,7 @@
 </module>
 <module>
     <name>objectsPropertiesCollector</name>
-    <workdir>/usr/local/src/robot/gsaponaro-unstable_modules/dummyActivityInterface/app/conf</workdir>
-    <!--<workdir>/home/gsaponaro/NOBACKUP/unstable-modules/dummyActivityInterface/app/conf</workdir>-->
-    <parameters>--name dummyMemory --db dummy_memory_out_of_reach.ini --no-save-db</parameters>
+    <parameters>--name dummyMemory --context poeticon --db dummy_memory_simple4.ini --no-save-db</parameters>
     <node>localhost</node>
 </module>
 <module>
