@@ -19,7 +19,7 @@
     <name>objectsPropertiesCollector</name>
     <workdir>/usr/local/src/robot/gsaponaro-unstable_modules/dummyActivityInterface/app/conf</workdir>
     <!--<workdir>/home/gsaponaro/NOBACKUP/unstable-modules/dummyActivityInterface/app/conf</workdir>-->
-    <parameters>--name dummyMemory --db memory_out_of_reach.ini --no-save-db</parameters>
+    <parameters>--name dummyMemory --db dummy_memory_out_of_reach.ini --no-save-db</parameters>
     <node>localhost</node>
 </module>
 <module>
