@@ -17,6 +17,7 @@
 #include <string>
 
 #include <yarp/os/Bottle.h>
+#include <yarp/os/BufferedPort.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
@@ -63,8 +64,9 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::RpcClient rpcPrada;
         yarp::os::RpcClient rpcPraxiconInterface;
         yarp::os::Port praxiconToPradaPort;
-        //yarp::os::BufferedPort<yarp::os::Bottle> pradaInputPort;
+        yarp::os::BufferedPort<yarp::os::Bottle> pradaInputPort;
         yarp::os::Mutex mutex;
+        std::string praxiconRequest;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
@@ -84,6 +86,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::string holdIn(const std::string &handName);
         bool isConnectedOutput(yarp::os::RpcClient &rpcClient);
         int name2id(const std::string &objName);
+        bool processPradaStatus(const yarp::os::Bottle &status);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
         bool setObjProperty(const std::string &objName, const std::string &prop, const yarp::os::Bottle &v);
         bool validate2D(const std::string &objName);

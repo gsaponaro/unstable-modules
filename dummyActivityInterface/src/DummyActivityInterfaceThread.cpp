@@ -39,7 +39,7 @@ bool DummyActivityInterfaceThread::openPorts()
     ret = ret && rpcPrada.open(("/"+moduleName+"/prada:rpc").c_str());
     ret = ret && rpcPraxiconInterface.open(("/"+moduleName+"/praxicon:rpc").c_str());
     ret = ret && praxiconToPradaPort.open(("/"+moduleName+"/praxicon:o").c_str());
-    //ret = ret && pradaInputPort.open(("/"+moduleName+"/prada:i").c_str());
+    ret = ret && pradaInputPort.open(("/"+moduleName+"/prada:i").c_str());
 
     return ret;
 }
@@ -52,7 +52,7 @@ void DummyActivityInterfaceThread::close()
     rpcPrada.close();
     rpcPraxiconInterface.close();
     praxiconToPradaPort.close();
-    //pradaInputPort.close();
+    pradaInputPort.close();
 
     return;
 }
@@ -66,7 +66,7 @@ void DummyActivityInterfaceThread::interrupt()
     rpcPrada.interrupt();
     rpcPraxiconInterface.interrupt();
     praxiconToPradaPort.interrupt();
-    //pradaInputPort.interrupt();
+    pradaInputPort.interrupt();
 
     return;
 }
@@ -101,6 +101,12 @@ void DummyActivityInterfaceThread::run()
 void DummyActivityInterfaceThread::mainProcessing()
 {
     yarp::os::Time::delay(0.01);
+
+    // TODO: use callback
+    Bottle *pradaInput;
+    pradaInput = pradaInputPort.read();
+    if (pradaInput != NULL)
+        processPradaStatus(*pradaInput);
 
     if (closing)
         return;
@@ -333,6 +339,93 @@ int DummyActivityInterfaceThread::name2id(const std::string &objName)
 }
 
 /**********************************************************/
+bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &status)
+{
+    yDebug("Got something from PRADA: %s", status.toString().c_str());
+
+    Bottle objectsUsed;
+    Bottle buns;
+    buns.addString("Bun-bottom");
+    buns.addString("Bun-top");
+    int passed[buns.size()];
+
+    if (status.size() > 0)
+    {
+        if (status.get(0).asString() == "OK")
+        {
+            for (int i=1; i<status.size(); ++i)
+            {
+                for (int x=0; x<buns.size(); ++x)
+                    passed[x] = 0;
+
+                for (int ii=0; ii<buns.size(); ++ii)
+                    if (status.get(i).asString() != buns.get(ii).asString())
+                        passed[ii] = 1;
+
+                int total = 0;
+                for (int x=0; x<buns.size(); ++x)
+                    total += passed[x];
+
+                if (total == buns.size())
+                    objectsUsed.addString(status.get(i).asString().c_str());
+            }
+            yInfo("I made a %s sandwich", objectsUsed.toString().c_str());
+        }
+        else if (status.get(0).asString() == "FAIL")
+        {
+            yDebug() << __func__ << "FAIL request is" << status.toString().c_str();
+            Bottle objectsMissing;
+            for (int i=1; i<status.size(); ++i)
+            {
+                objectsMissing.addString(status.get(i).asString());
+            }
+
+            string toSay = "I seem to be missing the ";
+            for (int i=0; i<objectsMissing.size(); ++i)
+            {
+                toSay += objectsMissing.get(i).asString();
+                if (i < objectsMissing.size()-1)
+                    toSay += " and ";
+            }
+
+            toSay.clear();
+            toSay = "Something has changed in the scene! I cannot complete the previous plan";
+
+            //executeSpeech(toSay);
+            yInfo("I need to ask the PRAXICON for help!" );
+
+            Bottle cmd, reply;
+            cmd.clear();
+            reply.clear();
+            cmd.addString("stopPlanner");
+            rpcPrada.write(cmd, reply);
+
+            cmd.clear();
+            reply.clear();
+            cmd.addString("startPlanner");
+            rpcPrada.write(cmd, reply);
+
+            if (reply.get(0).asVocab() == Vocab::encode("ok"))
+            {
+                yInfo() << __func__ << "asking PRAXICON for help:" << praxiconRequest.c_str();
+                Bottle listOfGoals = askPraxicon(praxiconRequest);
+                praxiconToPradaPort.write(listOfGoals);
+                yInfo() << __func__ << "the new list of goals sent to PRADA is:" << listOfGoals.toString().c_str();
+            }
+            else
+            {
+                yWarning("Cannot seem to get a reply from PRADA");
+            }
+        }
+        else
+        {
+            yWarning() << __func__ << "something is wrong with the status";
+        }
+    }
+    return true;
+}
+
+/**********************************************************/
 bool DummyActivityInterfaceThread::setObjProperty(const std::string &objName,
                                                   const std::string &prop,
                                                   const yarp::os::Bottle &v)
@@ -545,7 +638,7 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
         yInfo("Let's have a look at the scene!");
     }
 
-    //praxiconRequest = request;
+    praxiconRequest = request;
 
     Bottle listOfGoals;
     Bottle cmdPrax;
