@@ -91,7 +91,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         int name2id(const std::string &objName);
         bool processPradaStatus(const yarp::os::Bottle &status);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
-        void resetActionCounters();
+        void resetActionCounters(bool verbose=true);
         bool setObjProperty(const std::string &objName, const std::string &prop, const yarp::os::Bottle &v);
         bool validate2D(const std::string &objName);
         bool validate3D(const std::string &objName);

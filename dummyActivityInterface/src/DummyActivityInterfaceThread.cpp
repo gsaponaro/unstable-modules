@@ -87,7 +87,7 @@ bool DummyActivityInterfaceThread::threadInit()
 
     elements = 0;
 
-    resetActionCounters();
+    resetActionCounters(false);
 
     return true;
 }
@@ -372,8 +372,8 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
             yInfo("I made a %s sandwich", objectsUsed.toString().c_str());
-            const double successRate = robotActionsSuccessful/robotActionsAttempted;
-            yDebug("statistics: successful=%d attempted=%d (%f)",
+            const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
+            yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
                    robotActionsSuccessful, robotActionsAttempted, successRate);
         }
         else if (status.get(0).asString() == "FAIL")
@@ -392,12 +392,20 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                 if (i < objectsMissing.size()-1)
                     toSay += " and ";
             }
+            yInfo("%s", toSay.c_str());
 
+            const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
+            yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
+                   robotActionsSuccessful, robotActionsAttempted, successRate);
+
+            /*
             toSay.clear();
             toSay = "Something has changed in the scene! I cannot complete the previous plan";
+            yInfo("%s", toSay.c_str());
 
             //executeSpeech(toSay);
             yInfo("I need to ask the PRAXICON for help!" );
+            */
 
             Bottle cmd, reply;
             cmd.clear();
@@ -405,17 +413,21 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
             cmd.addString("stopPlanner");
             rpcPrada.write(cmd, reply);
 
+            /*
             cmd.clear();
             reply.clear();
             cmd.addString("startPlanner");
             rpcPrada.write(cmd, reply);
+            */
 
             if (reply.get(0).asVocab() == Vocab::encode("ok"))
             {
                 yInfo() << __func__ << "asking PRAXICON for help:" << praxiconRequest.c_str();
+                /*
                 Bottle listOfGoals = askPraxicon(praxiconRequest);
                 praxiconToPradaPort.write(listOfGoals);
                 yInfo() << __func__ << "the new list of goals sent to PRADA is:" << listOfGoals.toString().c_str();
+                */
             }
             else
             {
@@ -431,9 +443,10 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
 }
 
 /**********************************************************/
-void DummyActivityInterfaceThread::resetActionCounters()
+void DummyActivityInterfaceThread::resetActionCounters(bool verbose)
 {
-    yDebug("before reset: successful=%d attempted=%d", robotActionsSuccessful, robotActionsAttempted);
+    if (verbose)
+        yDebug("before reset: successful=%d attempted=%d", robotActionsSuccessful, robotActionsAttempted);
 
     robotActionsAttempted = 0;
     robotActionsSuccessful = 0;
