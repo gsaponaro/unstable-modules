@@ -68,6 +68,9 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::Mutex mutex;
         std::string praxiconRequest;
 
+        int robotActionsAttempted;
+        int robotActionsSuccessful;
+
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,
                                      yarp::os::ResourceFinder &_rf);
@@ -88,6 +91,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         int name2id(const std::string &objName);
         bool processPradaStatus(const yarp::os::Bottle &status);
         yarp::os::Bottle queryUnderOf(const std::string &objName);
+        void resetActionCounters();
         bool setObjProperty(const std::string &objName, const std::string &prop, const yarp::os::Bottle &v);
         bool validate2D(const std::string &objName);
         bool validate3D(const std::string &objName);

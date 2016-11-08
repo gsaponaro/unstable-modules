@@ -87,6 +87,8 @@ bool DummyActivityInterfaceThread::threadInit()
 
     elements = 0;
 
+    resetActionCounters();
+
     return true;
 }
 
@@ -370,6 +372,9 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
             yInfo("I made a %s sandwich", objectsUsed.toString().c_str());
+            const double successRate = robotActionsSuccessful/robotActionsAttempted;
+            yDebug("statistics: successful=%d attempted=%d (%f)",
+                   robotActionsSuccessful, robotActionsAttempted, successRate);
         }
         else if (status.get(0).asString() == "FAIL")
         {
@@ -423,6 +428,17 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
         }
     }
     return true;
+}
+
+/**********************************************************/
+void DummyActivityInterfaceThread::resetActionCounters()
+{
+    yDebug("before reset: successful=%d attempted=%d", robotActionsSuccessful, robotActionsAttempted);
+
+    robotActionsAttempted = 0;
+    robotActionsSuccessful = 0;
+
+    yDebug("action counters reset");
 }
 
 /**********************************************************/
@@ -571,6 +587,9 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 
     yInfo("Can you give me the %s, please?", label.c_str());
 
+    robotActionsAttempted++;
+    yInfo("Trying to grab the tool %s with the help of the human", label.c_str());
+
     // grasp the tool with the help of the human, probabilistically
     const double noise = yarp::math::Rand::scalar();
     bool success = (noise <= probability_grasp_tool);
@@ -594,6 +613,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
             }
         }
 
+        robotActionsSuccessful++;
         yInfo("Thank you, I successfully grasped the %s", label.c_str());
     }
     else
@@ -707,6 +727,8 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
     query.addString("query");
     query.addString(request.c_str());
 
+    resetActionCounters();
+
     yInfo("Let's query the PRAXICON! Sending query:");
     yInfo("%s", cmdPrax.toString().c_str());
     rpcPraxiconInterface.write(cmdPrax,replyPrax);
@@ -766,7 +788,9 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
         yInfo("cannot drop %s because it is not in my hands", objName.c_str());
     }
 
-    yInfo("OK, I will drop the %s", objName.c_str());
+    robotActionsAttempted++;
+    yInfo("trying to drop the %s", objName.c_str());
+
     // do the drop action probabilistically
     bool success = true;
     if (success)
@@ -782,9 +806,13 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
                 break;
             }
         }
-    }
 
-    yInfo("dropped %s", objName.c_str());
+        robotActionsSuccessful++;
+        yInfo("successfully dropped the %s", objName.c_str());
+    }
+    else
+        yWarning("did not drop %s", objName.c_str());
+
 
     return true;
 }
@@ -994,6 +1022,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         return false;
     }
 
+    robotActionsAttempted++;
     yInfo("trying to pull %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -1035,6 +1064,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
 
         setObjProperty(objName, "position_3d", finPos3D);
 
+        robotActionsSuccessful++;
         yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
@@ -1071,6 +1101,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         return false;
     }
 
+    robotActionsAttempted++;
     yInfo("trying to push %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -1112,6 +1143,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 
         setObjProperty(objName, "position_3d", finPos3D);
 
+        robotActionsSuccessful++;
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
@@ -1134,6 +1166,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         return false;
     }
 
+    robotActionsAttempted++;
     yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
 
     string handName = inHand(objName);
@@ -1215,6 +1248,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
                 }
             }
 
+            robotActionsSuccessful++;
             yInfo("successfully put %s on %s", objName.c_str(), targetName.c_str());
         }
         else
@@ -1336,6 +1370,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         return false;
     }
 
+    robotActionsAttempted++;
     yInfo("trying to take %s with %s", objName.c_str(), handName.c_str());
 
     //check for hand status beforehand to make sure that it is empty
@@ -1375,6 +1410,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         // update inHandStatus map
         inHandStatus.insert(pair<string, string>(objName.c_str(), handName.c_str()));
 
+        robotActionsSuccessful++;
         yInfo("successfully took %s with %s", objName.c_str(), handName.c_str());
     }
     else
