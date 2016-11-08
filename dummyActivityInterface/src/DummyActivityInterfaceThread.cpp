@@ -237,16 +237,16 @@ void DummyActivityInterfaceThread::getParameters()
     enforceProbabilityBounds(probability_take_right);
     enforceProbabilityBounds(probability_vision_object);
 
-    yInfo("probability_grasp_tool_left: %f", probability_grasp_tool_left);
-    yInfo("probability_grasp_tool_right: %f", probability_grasp_tool_right);
-    yInfo("probability_perceive_grasp: %f", probability_perceive_grasp);
-    yInfo("probability_pull: %f", probability_pull);
-    yInfo("probability_push: %f", probability_push);
-    yInfo("probability_put_left: %f", probability_put_left);
-    yInfo("probability_put_right: %f", probability_put_right);
-    yInfo("probability_take_left: %f", probability_take_left);
-    yInfo("probability_take_right: %f", probability_take_right);
-    yInfo("probability_vision_object: %f", probability_vision_object);
+    yInfo("probability_grasp_tool_left %f", probability_grasp_tool_left);
+    yInfo("probability_grasp_tool_right %f", probability_grasp_tool_right);
+    yInfo("probability_perceive_grasp %f", probability_perceive_grasp);
+    yInfo("probability_pull %f", probability_pull);
+    yInfo("probability_push %f", probability_push);
+    yInfo("probability_put_left %f", probability_put_left);
+    yInfo("probability_put_right %f", probability_put_right);
+    yInfo("probability_take_left %f", probability_take_left);
+    yInfo("probability_take_right %f", probability_take_right);
+    yInfo("probability_vision_object %f", probability_vision_object);
 
     return;
 }
