@@ -17,7 +17,7 @@ using namespace yarp::os;
 bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
 {
     // module parameters
-    moduleName = rf.check("name", Value("dummyActivityInterface")).asString();
+    moduleName = rf.check("name", Value("activityInterface")).asString();
     setName(moduleName.c_str());
 
     handlerPortName = "/" + moduleName + "/rpc:i";

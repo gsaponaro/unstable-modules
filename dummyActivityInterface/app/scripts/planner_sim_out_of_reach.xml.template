@@ -12,7 +12,6 @@
 </module>
 <module>
     <name>dummyActivityInterface</name>
-    <parameters>--name activityInterface</parameters>
     <node>localhost</node>
 </module>
 <module>

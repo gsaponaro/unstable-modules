@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     if(rf.check("help"))
     {
         yInfo("Available options:");
-        yInfo("--name prefix (default dummyActivityInterface)");
+        yInfo("--name prefix (default activityInterface)");
         return 0; // EXIT_SUCCESS
     }
 
