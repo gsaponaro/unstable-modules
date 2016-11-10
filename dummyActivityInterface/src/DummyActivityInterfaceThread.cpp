@@ -381,6 +381,9 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
             }
             yInfo("I successfully made a %s sandwich", objectsUsed.toString().c_str());
             const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
+            yDebug("list of attempted motor actions:");
+            for (int a=0; a<robotActions.size(); ++a)
+                yDebug("%s", robotActions.get(a).asString().c_str());
             yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
                    robotActionsSuccessful, robotActionsAttempted, successRate);
         }
@@ -456,6 +459,7 @@ void DummyActivityInterfaceThread::resetActionCounters(bool verbose)
     if (verbose)
         yDebug("before reset: successful=%d attempted=%d", robotActionsSuccessful, robotActionsAttempted);
 
+    robotActions.clear();
     robotActionsAttempted = 0;
     robotActionsSuccessful = 0;
 
@@ -587,7 +591,8 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                                               const int32_t xpos,
                                               const int32_t ypos)
 {
-    yDebug("motor action requested: %s %s %d %d", __func__, handName.c_str(), xpos, ypos);
+    string action = string(__func__) + " " + handName.c_str() + " " + xpos + " " + ypos;
+    yDebug("motor action requested: %s", action.c_str());
 
     // requested object
     string label = getLabel(xpos, ypos);
@@ -610,6 +615,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 
     //yInfo("Can you give me the %s, please?", label.c_str());
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("Trying to grab the tool %s with the help of the human", label.c_str());
 
@@ -802,7 +808,8 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 /**********************************************************/
 bool DummyActivityInterfaceThread::drop(const string &objName)
 {
-    yDebug("motor action requested: %s %s", __func__, objName.c_str());
+    string action = string(__func__) + " " + objName.c_str();
+    yDebug("motor action requested: %s", action.c_str());
 
     string handName = inHand(objName);
 
@@ -811,6 +818,7 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
         yWarning("cannot drop %s because it is not in my hands", objName.c_str());
     }
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("trying to drop the %s", objName.c_str());
 
@@ -1039,7 +1047,8 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
 {
-    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), toolName.c_str());
+    string action = string(__func__) + " " + objName.c_str() + " " + toolName.c_str();
+    yDebug("motor action requested: %s", action.c_str());
 
     if (! isConnectedOutput(rpcMemory))
     {
@@ -1047,6 +1056,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         return false;
     }
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("trying to pull %s with %s", objName.c_str(), toolName.c_str());
 
@@ -1120,7 +1130,8 @@ Bottle DummyActivityInterfaceThread::pullableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::push(const string &objName, const string &toolName)
 {
-    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), toolName.c_str());
+    string action = string(__func__) + " " + objName.c_str() + " " + toolName.c_str();
+    yDebug("motor action requested: %s", action.c_str());
 
     if (! isConnectedOutput(rpcMemory))
     {
@@ -1128,6 +1139,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         return false;
     }
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("trying to push %s with %s", objName.c_str(), toolName.c_str());
 
@@ -1187,7 +1199,8 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 /**********************************************************/
 bool DummyActivityInterfaceThread::put(const string &objName, const string &targetName)
 {
-    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), targetName.c_str());
+    string action = string(__func__) + " " + objName.c_str() + " " + targetName.c_str();
+    yDebug("motor action requested: %s", action.c_str());
 
     if (! isConnectedOutput(rpcMemory))
     {
@@ -1195,6 +1208,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         return false;
     }
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
 
@@ -1390,7 +1404,8 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::take(const string &objName, const string &handName)
 {
-    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), handName.c_str());
+    string action = string(__func__) + " " + objName.c_str() + " " + handName.c_str();
+    yDebug("motor action requested: %s", action.c_str());
 
     if (handName != "left" && handName != "right")
     {
@@ -1398,6 +1413,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         return false;
     }
 
+    robotActions.addString(action);
     robotActionsAttempted++;
     yInfo("trying to take %s with %s", objName.c_str(), handName.c_str());
 

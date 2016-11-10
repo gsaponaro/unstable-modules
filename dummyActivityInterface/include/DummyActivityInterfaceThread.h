@@ -71,6 +71,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::Mutex mutex;
         std::string praxiconRequest;
 
+        yarp::os::Bottle robotActions;
         int robotActionsAttempted;
         int robotActionsSuccessful;
 
