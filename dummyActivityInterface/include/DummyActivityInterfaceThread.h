@@ -55,6 +55,9 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         double probability_take_left;
         double probability_take_right;
         double probability_vision_object;
+        double reachable_threshold_x;
+        double reachable_threshold_y_left;
+        double reachable_threshold_y_right;
 
         std::map<std::string, std::string> inHandStatus;
         std::map<int, std::string> onTopElements;

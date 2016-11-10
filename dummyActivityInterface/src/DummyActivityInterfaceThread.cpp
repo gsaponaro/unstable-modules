@@ -239,6 +239,10 @@ void DummyActivityInterfaceThread::getParameters()
     enforceProbabilityBounds(probability_take_right);
     enforceProbabilityBounds(probability_vision_object);
 
+    reachable_threshold_x = rf.check("reachable_threshold_x",Value(-0.48)).asDouble();
+    reachable_threshold_y_left = rf.check("reachable_threshold_y_left",Value(-0.15)).asDouble();
+    reachable_threshold_y_right = rf.check("reachable_threshold_y_right",Value(0.15)).asDouble();
+
     yInfo("probability_grasp_tool_left %f", probability_grasp_tool_left);
     yInfo("probability_grasp_tool_right %f", probability_grasp_tool_right);
     yInfo("probability_perceive_grasp %f", probability_perceive_grasp);
@@ -249,6 +253,10 @@ void DummyActivityInterfaceThread::getParameters()
     yInfo("probability_take_left %f", probability_take_left);
     yInfo("probability_take_right %f", probability_take_right);
     yInfo("probability_vision_object %f", probability_vision_object);
+
+    yInfo("reachable_threshold_x %f", reachable_threshold_x);
+    yInfo("reachable_threshold_y_left %f", reachable_threshold_y_left);
+    yInfo("reachable_threshold_y_right %f", reachable_threshold_y_right);
 
     return;
 }
@@ -1287,10 +1295,9 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
         return replyList;
 
     Bottle pos3D = get3D(objName);
-    const double xThresh = -0.48;
-    if (pos3D.get(0).asDouble() < xThresh)
+    if (pos3D.get(0).asDouble() < reachable_threshold_x)
     {
-        // in threshold
+        // within threshold
 
         Bottle list = pullableWith(objName);
         for (int i=0; i<list.size(); ++i)
@@ -1358,11 +1365,9 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
             }
         }
 
-        const double yThreshLeft  = -0.15;
-        const double yThreshRight =  0.15;
-        if (pos3D.get(1).asDouble() < yThreshLeft)
+        if (pos3D.get(1).asDouble() < reachable_threshold_y_left)
             replyList.addString("left");
-        else if (pos3D.get(1).asDouble() > yThreshRight)
+        else if (pos3D.get(1).asDouble() > reachable_threshold_y_right)
             replyList.addString("right");
         else
         {
