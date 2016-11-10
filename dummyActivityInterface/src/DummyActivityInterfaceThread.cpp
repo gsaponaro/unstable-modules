@@ -379,7 +379,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                 if (total == buns.size())
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
-            yInfo("I made a %s sandwich", objectsUsed.toString().c_str());
+            yInfo("I successfully made a %s sandwich", objectsUsed.toString().c_str());
             const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
             yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
                    robotActionsSuccessful, robotActionsAttempted, successRate);
@@ -400,7 +400,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                 if (i < objectsMissing.size()-1)
                     toSay += " and ";
             }
-            yInfo("%s", toSay.c_str());
+            yDebug("%s", toSay.c_str());
 
             const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
             yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
@@ -430,7 +430,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
 
             if (reply.get(0).asVocab() == Vocab::encode("ok"))
             {
-                yInfo() << __func__ << "asking PRAXICON for help:" << praxiconRequest.c_str();
+                yDebug() << __func__ << "asking PRAXICON for help:" << praxiconRequest.c_str();
                 /*
                 Bottle listOfGoals = askPraxicon(praxiconRequest);
                 praxiconToPradaPort.write(listOfGoals);
@@ -587,6 +587,8 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                                               const int32_t xpos,
                                               const int32_t ypos)
 {
+    yDebug("motor action requested: %s %s %d %d", __func__, handName.c_str(), xpos, ypos);
+
     // requested object
     string label = getLabel(xpos, ypos);
 
@@ -606,7 +608,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     const double probability_grasp_tool =
         (handName=="left" ? probability_grasp_tool_left : probability_grasp_tool_right);
 
-    yInfo("Can you give me the %s, please?", label.c_str());
+    //yInfo("Can you give me the %s, please?", label.c_str());
 
     robotActionsAttempted++;
     yInfo("Trying to grab the tool %s with the help of the human", label.c_str());
@@ -635,7 +637,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
         }
 
         robotActionsSuccessful++;
-        yInfo("Thank you, I successfully grasped the %s", label.c_str());
+        yDebug("Thank you, I successfully grasped the %s", label.c_str());
     }
     else
     {
@@ -685,15 +687,15 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
     Bottle cmdPrax;
     Bottle replyPrax;
 
-    yInfo() << __func__ << "request is:" << request.c_str();
+    yDebug() << __func__ << "request is:" << request.c_str();
 
     Bottle toolLikeMemory = getToolLikeNames();
     Bottle objectsMemory = getNames();
     string inHandLeft = holdIn("left");
     string inHandRight = holdIn("right");
 
-    yInfo() << __func__ << "tool names (will be ignored by PRAXICON):" << toolLikeMemory.toString().c_str();
-    yInfo() << __func__ << "object names:" << objectsMemory.toString().c_str();
+    yDebug() << __func__ << "tool names (will be ignored by PRAXICON):" << toolLikeMemory.toString().c_str();
+    yDebug() << __func__ << "object names:" << objectsMemory.toString().c_str();
 
     Bottle &listOfObjects = cmdPrax.addList();
 
@@ -750,8 +752,7 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 
     resetActionCounters();
 
-    yInfo("Let's query the PRAXICON! Sending query:");
-    yInfo("%s", cmdPrax.toString().c_str());
+    yDebug("Let's query the PRAXICON! Sending query %s", cmdPrax.toString().c_str());
     rpcPraxiconInterface.write(cmdPrax,replyPrax);
 
     Bottle &tmpList = listOfGoals.addList();
@@ -785,13 +786,12 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
             tmp.addString(tokens[i].c_str());
         }
 
-        yInfo("Got a reply from the PRAXICON, will now think about it!");
+        yDebug("Got a reply from the PRAXICON, will now think about it!");
         yInfo("%s", listOfGoals.toString().c_str());
     }
     else
     {
-        yError() << __func__ << "something went wrong with the request";
-        yInfo("something went terribly wrong. I cannot %s", request.c_str());
+        yError("something went terribly wrong. I cannot %s", request.c_str());
     }
 
     praxiconToPradaPort.write(listOfGoals);
@@ -802,11 +802,13 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 /**********************************************************/
 bool DummyActivityInterfaceThread::drop(const string &objName)
 {
+    yDebug("motor action requested: %s %s", __func__, objName.c_str());
+
     string handName = inHand(objName);
 
     if (handName == "none")
     {
-        yInfo("cannot drop %s because it is not in my hands", objName.c_str());
+        yWarning("cannot drop %s because it is not in my hands", objName.c_str());
     }
 
     robotActionsAttempted++;
@@ -829,7 +831,7 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
         }
 
         robotActionsSuccessful++;
-        yInfo("successfully dropped the %s", objName.c_str());
+        yDebug("successfully dropped the %s", objName.c_str());
     }
     else
         yWarning("did not drop %s", objName.c_str());
@@ -1037,6 +1039,8 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::pull(const string &objName, const string &toolName)
 {
+    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), toolName.c_str());
+
     if (! isConnectedOutput(rpcMemory))
     {
         yError("memory not connected");
@@ -1116,6 +1120,8 @@ Bottle DummyActivityInterfaceThread::pullableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::push(const string &objName, const string &toolName)
 {
+    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), toolName.c_str());
+
     if (! isConnectedOutput(rpcMemory))
     {
         yError("memory not connected");
@@ -1181,6 +1187,8 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 /**********************************************************/
 bool DummyActivityInterfaceThread::put(const string &objName, const string &targetName)
 {
+    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), targetName.c_str());
+
     if (! isConnectedOutput(rpcMemory))
     {
         yError("memory not connected");
@@ -1382,6 +1390,8 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::take(const string &objName, const string &handName)
 {
+    yDebug("motor action requested: %s %s %s", __func__, objName.c_str(), handName.c_str());
+
     if (handName != "left" && handName != "right")
     {
         yError("hand name %s not recognized: must be left or right", handName.c_str());
