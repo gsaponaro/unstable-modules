@@ -31,9 +31,6 @@ class DummyActivityInterfaceModule : public yarp::os::RFModule,
         // pointer to a new thread
         DummyActivityInterfaceThread *thread;
 
-        // thread stuff
-        double threadPeriod;
-
     public:
         virtual bool configure(yarp::os::ResourceFinder &rf);
         virtual bool interruptModule();

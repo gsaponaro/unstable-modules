@@ -9,6 +9,7 @@
  *
  */
 
+#include "Defaults.h"
 #include "DummyActivityInterfaceModule.h"
 
 using namespace std;
@@ -25,9 +26,6 @@ bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
     attach(handlerPort);
 
     closing = false;
-
-    // thread stuff
-    threadPeriod = 0.033; // [s]
 
     // create new thread, pass parameters with ResourceFinder
     thread = new DummyActivityInterfaceThread(moduleName,

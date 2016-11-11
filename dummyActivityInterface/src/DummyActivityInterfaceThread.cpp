@@ -16,6 +16,7 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/Rand.h>
 
+#include "Defaults.h"
 #include "DummyActivityInterfaceThread.h"
 
 using namespace std;
@@ -25,7 +26,7 @@ using namespace yarp::os;
 DummyActivityInterfaceThread::DummyActivityInterfaceThread(
     const string &_moduleName,
     ResourceFinder &_rf)
-    : RateThread(33), // [ms]
+    : RateThread(DefThreadPeriod),
       moduleName(_moduleName),
       rf(_rf)
 {

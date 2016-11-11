@@ -43,9 +43,6 @@ struct RobotAction {
     std::string outcome;
 };
 
-const std::string Success = "SUCCESS";
-const std::string Failure = "FAIL";
-
 class DummyActivityInterfaceThread : public yarp::os::RateThread
 {
     private:

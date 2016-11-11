@@ -12,6 +12,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/Network.h>
 
+#include "Defaults.h"
 #include "DummyActivityInterfaceModule.h"
 
 using namespace yarp::os;
@@ -29,7 +30,8 @@ int main(int argc, char *argv[])
     if(rf.check("help"))
     {
         yInfo("Available options:");
-        yInfo("--name prefix (default activityInterface)");
+        yInfo("--name <port prefix> (default %s)", DefModuleName.c_str());
+        yInfo(" ");
         return 0; // EXIT_SUCCESS
     }
 
