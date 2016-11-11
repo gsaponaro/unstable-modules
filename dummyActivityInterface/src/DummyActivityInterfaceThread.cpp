@@ -453,10 +453,9 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
 void DummyActivityInterfaceThread::resetActionCounters(bool verbose)
 {
     if (verbose)
-        yDebug("before reset: successful=%d attempted=%d", robotActionsSuccessful, robotActionsAttempted);
+        yDebug("before reset: successful=%d attempted=%lu", robotActionsSuccessful, robotActions.size());
 
     robotActions.clear();
-    robotActionsAttempted = 0;
     robotActionsSuccessful = 0;
 
     yDebug("action counters reset");
@@ -619,7 +618,6 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
 
     robotActions.push_back(RobotAction());
     robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
     yInfo("Trying to grab the tool %s with the help of the human", label.c_str());
 
     // grasp the tool with the help of the human, probabilistically
@@ -832,7 +830,6 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
 
     robotActions.push_back(RobotAction());
     robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
     yInfo("trying to drop the %s", objName.c_str());
 
     // do the drop action probabilistically
@@ -867,18 +864,17 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::dump()
 {
-    yDebug("assert robotActionsAttempted %d == %lu robotActions.size()", robotActionsAttempted, robotActions.size());
-
-    if (robotActionsAttempted > 0)
+    if (robotActions.size() > 0)
     {
-        const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActionsAttempted);
+        const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActions.size());
 
         yDebug("list of attempted motor actions:");
         for (int a=0; a<robotActions.size(); ++a)
-            yDebug("%s\t%s", robotActions[a].action.c_str(), robotActions[a].outcome.c_str());
+            yDebug("%-26s %s", robotActions[a].action.c_str(), robotActions[a].outcome.c_str());
 
-        yDebug("robot action statistics: successful=%d attempted=%d (success rate %.2f)",
-               robotActionsSuccessful, robotActionsAttempted, successRate);
+        yDebug("==================================");
+        yDebug("successful=%d attempted=%lu (success rate %.2f)",
+               robotActionsSuccessful, robotActions.size(), successRate);
     }
 
     return true;
@@ -1094,7 +1090,6 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
 
     robotActions.push_back(RobotAction());
     robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
     yInfo("trying to pull %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -1180,7 +1175,6 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
 
     robotActions.push_back(RobotAction());
     robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
     yInfo("trying to push %s with %s", objName.c_str(), toolName.c_str());
 
     string handName = inHand(toolName);
@@ -1250,11 +1244,6 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         return false;
     }
 
-    robotActions.push_back(RobotAction());
-    robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
-    yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
-
     string handName = inHand(objName);
     if (handName == "none")
     {
@@ -1263,6 +1252,10 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
 
         return false;
     }
+
+    robotActions.push_back(RobotAction());
+    robotActions[robotActions.size()-1].action = action;
+    yInfo("trying to put %s on %s", objName.c_str(), targetName.c_str());
 
     // save the left/right success threshold for this action
     const double probability_put =
@@ -1464,11 +1457,6 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         return false;
     }
 
-    robotActions.push_back(RobotAction());
-    robotActions[robotActions.size()-1].action = action;
-    robotActionsAttempted++;
-    yInfo("trying to take %s with %s", objName.c_str(), handName.c_str());
-
     //check for hand status beforehand to make sure that it is empty
     string handStatus = inHand(objName);
 
@@ -1479,6 +1467,10 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
 
         return false;
     }
+
+    robotActions.push_back(RobotAction());
+    robotActions[robotActions.size()-1].action = action;
+    yInfo("trying to take %s with %s", objName.c_str(), handName.c_str());
 
     // save the left/right success threshold for this action
     const double probability_take =

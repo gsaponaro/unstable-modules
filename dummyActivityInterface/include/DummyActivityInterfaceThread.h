@@ -80,7 +80,6 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::string praxiconRequest;
 
         std::vector<RobotAction> robotActions;
-        int robotActionsAttempted;
         int robotActionsSuccessful;
 
     public:
