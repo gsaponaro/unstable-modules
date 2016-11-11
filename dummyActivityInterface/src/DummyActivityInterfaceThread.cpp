@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <sstream>
 #include <vector>
 
 #include <yarp/math/Math.h>
@@ -587,7 +588,10 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                                               const int32_t xpos,
                                               const int32_t ypos)
 {
-    string action = string(__func__) + " " + handName.c_str() + " " + xpos + " " + ypos;
+    // http://www.cplusplus.com/articles/D9j2Nwbp/#n2s
+    string stringxpos = static_cast<ostringstream*>( &(ostringstream() << xpos) )->str();
+    string stringypos = static_cast<ostringstream*>( &(ostringstream() << ypos) )->str();
+    string action = string(__func__) + " " + handName.c_str() + " " + stringxpos + " " + stringypos;
     yDebug("motor action requested: %s", action.c_str());
 
     if (! isConnectedOutput(rpcMemory))
