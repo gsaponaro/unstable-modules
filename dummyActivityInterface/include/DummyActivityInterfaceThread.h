@@ -38,6 +38,14 @@
 # endif
 #endif
 
+struct RobotAction {
+    std::string action;
+    std::string outcome;
+};
+
+const std::string Success = "SUCCESS";
+const std::string Failure = "FAIL";
+
 class DummyActivityInterfaceThread : public yarp::os::RateThread
 {
     private:
@@ -71,7 +79,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::Mutex mutex;
         std::string praxiconRequest;
 
-        yarp::os::Bottle robotActions;
+        std::vector<RobotAction> robotActions;
         int robotActionsAttempted;
         int robotActionsSuccessful;
 
@@ -105,6 +113,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         bool askForTool(const std::string &handName, const int32_t xpos, const int32_t ypos);
         yarp::os::Bottle askPraxicon(const std::string &request);
         bool drop(const std::string &objName);
+        bool dump();
         yarp::os::Bottle get2D(const std::string &objName);
         yarp::os::Bottle get3D(const std::string &objName);
         std::string getLabel(const int32_t xpos, const int32_t ypos);

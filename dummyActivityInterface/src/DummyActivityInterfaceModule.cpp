@@ -99,6 +99,11 @@ bool DummyActivityInterfaceModule::drop(const string &objName)
     return thread->drop(objName);
 }
 
+bool DummyActivityInterfaceModule::dump()
+{
+    return thread->dump();
+}
+
 Bottle DummyActivityInterfaceModule::get2D(const string &objName)
 {
     return thread->get2D(objName);

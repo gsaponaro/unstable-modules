@@ -38,6 +38,12 @@ service DummyActivityInterface_IDL
   bool drop(1:string objName);
 
   /**
+  * Print information about the current progress on screen.
+  * @return true/false on success/failure
+  */
+  bool dump();
+
+  /**
   * Get the 2D position of the object requested by the user.
   * @param objName specifies the name of the object
   * @return Bottle containing 2D position
