@@ -1129,7 +1129,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
 
         Bottle initPos3D = get3D(objName);
         Bottle finPos3D;
-        const double displacement3D = 0.10;
+        const double displacement3D = 0.20;
         finPos3D.addDouble(initPos3D.get(0).asDouble() + displacement3D);
         finPos3D.addDouble(initPos3D.get(1).asDouble());
         finPos3D.addDouble(initPos3D.get(2).asDouble());
