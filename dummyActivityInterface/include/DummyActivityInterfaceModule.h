@@ -52,6 +52,7 @@ class DummyActivityInterfaceModule : public yarp::os::RFModule,
         bool goHome();
         bool handStat(const std::string &handName);
         std::string inHand(const std::string &objName);
+        bool pop();
         bool pull(const std::string &objName, const std::string &toolName);
         yarp::os::Bottle pullableWith(const std::string &objName);
         bool push(const std::string &objName, const std::string &toolName);

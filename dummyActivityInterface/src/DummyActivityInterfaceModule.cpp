@@ -143,6 +143,11 @@ string DummyActivityInterfaceModule::inHand(const string &objName)
     return thread->inHand(objName);
 }
 
+bool DummyActivityInterfaceModule::pop()
+{
+    return thread->pop();
+}
+
 bool DummyActivityInterfaceModule::pull(const string &objName, const string &toolName)
 {
     return thread->pull(objName, toolName);

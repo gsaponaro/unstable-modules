@@ -87,6 +87,7 @@ bool DummyActivityInterfaceThread::threadInit()
         return false;
     }
 
+    onTopElements.clear();
     elements = 0;
 
     resetActionCounters(false);
@@ -1079,6 +1080,48 @@ string DummyActivityInterfaceThread::inHand(const std::string &objName)
         handName = "none";
 
     return handName;
+}
+
+/**********************************************************/
+bool DummyActivityInterfaceThread::pop()
+{
+    if (!onTopElements.empty() &&
+        (onTopElements.rbegin() != onTopElements.rend()))
+    {
+        const string topObjName = onTopElements.rbegin()->second;
+
+        yDebug("removing top object (%s) from the object stack", topObjName.c_str());
+        onTopElements.erase(onTopElements.rbegin()->first);
+
+        Bottle initPos2D = get2D(topObjName);
+        Bottle finPos2D;
+        const double displacement2D = 5.0;
+        finPos2D.addDouble(initPos2D.get(0).asDouble());
+        finPos2D.addDouble(initPos2D.get(1).asDouble() + displacement2D);
+        finPos2D.addDouble(initPos2D.get(2).asDouble());
+        finPos2D.addDouble(initPos2D.get(3).asDouble() + displacement2D);
+
+        setObjProperty(topObjName, "position_2d_left", finPos2D);
+
+        Bottle initPos3D = get3D(topObjName);
+        Bottle finPos3D;
+        const double displacement3D = 0.10;
+        finPos3D.addDouble(initPos3D.get(0).asDouble());
+        finPos3D.addDouble(initPos3D.get(1).asDouble() + displacement3D);
+        finPos3D.addDouble(initPos3D.get(2).asDouble());
+
+        setObjProperty(topObjName, "position_3d", finPos3D);
+
+        yDebug("old %s coordinates: 2D %s, 3D %s", topObjName.c_str(), initPos2D.toString().c_str(), initPos3D.toString().c_str());
+        yDebug("new %s coordinates: 2D %s, 3D %s", topObjName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
+
+        return true;
+    }
+    else
+    {
+        yWarning("object stack is empty, cannot remove top object");
+        return false;
+    }
 }
 
 /**********************************************************/

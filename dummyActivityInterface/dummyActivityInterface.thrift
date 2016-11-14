@@ -33,7 +33,7 @@ service DummyActivityInterface_IDL
   /**
   * Perform the drops action on the particular object with the particular hand
   * @param objName specifies the name of the object in question
-  * @return true/false on droping or not
+  * @return true/false on dropping or not
   **/
   bool drop(1:string objName);
 
@@ -90,6 +90,12 @@ service DummyActivityInterface_IDL
   * @return string with the name of the hand left, right or none if not located in any hand.
   **/
   string inHand(1:string objName);
+
+  /**
+  * Remove the top object from the object stack.
+  * @return true/false on success or not
+  **/
+  bool pop();
 
   /**
   * Perform the pull action on the particular object with the particular tool
