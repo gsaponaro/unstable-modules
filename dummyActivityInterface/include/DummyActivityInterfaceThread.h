@@ -75,6 +75,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::BufferedPort<yarp::os::Bottle> pradaInputPort;
         yarp::os::Mutex mutex;
         std::string praxiconRequest;
+        yarp::os::Bottle listOfGoals;
 
         std::vector<RobotAction> robotActions;
         int robotActionsSuccessful;

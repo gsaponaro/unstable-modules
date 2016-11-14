@@ -112,8 +112,11 @@ void DummyActivityInterfaceThread::run()
 void DummyActivityInterfaceThread::delayAfterMotor()
 {
     int s = static_cast<int>(getRate())/1000;
-    yDebug("delaying %d seconds...", s);
-    yarp::os::Time::delay(s);
+    if (s > 0)
+    {
+        yDebug("delaying %d seconds...", s);
+        yarp::os::Time::delay(s);
+    }
 }
 
 /**********************************************************/
@@ -433,7 +436,8 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
             {
                 yDebug() << __func__ << "asking PRAXICON for help:" << praxiconRequest.c_str();
                 /*
-                Bottle listOfGoals = askPraxicon(praxiconRequest);
+                listOfGoals.clear();
+                listOfGoals = askPraxicon(praxiconRequest);
                 praxiconToPradaPort.write(listOfGoals);
                 yInfo() << __func__ << "the new list of goals sent to PRADA is:" << listOfGoals.toString().c_str();
                 */
@@ -699,7 +703,8 @@ Bottle DummyActivityInterfaceThread::askPraxicon(const string &request)
 
     praxiconRequest = request;
 
-    Bottle listOfGoals;
+    //Bottle listOfGoals;
+    listOfGoals.clear();
     Bottle cmdPrax;
     Bottle replyPrax;
 
@@ -873,6 +878,13 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
 /**********************************************************/
 bool DummyActivityInterfaceThread::dump()
 {
+    if (listOfGoals.size() > 0)
+    {
+        yDebug("list of high-level instructions from the PRAXICON reasoner:");
+        yDebug("%s", listOfGoals.toString().c_str());
+        yDebug("==================================");
+    }
+
     if (robotActions.size() > 0)
     {
         const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActions.size());
