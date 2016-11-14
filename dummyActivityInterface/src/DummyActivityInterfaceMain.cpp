@@ -29,9 +29,29 @@ int main(int argc, char *argv[])
 
     if(rf.check("help"))
     {
-        yInfo("Available options:");
+        const double LowerBound = 0.0;
+        const double UpperBound = 1.0;
+
+        yInfo("Basic options:");
         yInfo("--name <port prefix> (default %s)", DefModuleName.c_str());
+        yInfo("--period <period in seconds> (default %f)", DefModulePeriod);
         yInfo(" ");
+        yInfo("Noise options (the probability of success ranges from %f to %f", LowerBound, UpperBound);
+        yInfo("--probability_grasp_tool_left <probability> (default: %f)", DefProbabilityGraspToolLeft);
+        yInfo("--probability_grasp_tool_right <probability> (default: %f)", DefProbabilityGraspToolRight);
+        yInfo("--probability_perceive_grasp <probability> (default: %f)", DefProbabilityPerceiveGrasp);
+        yInfo("--probability_pull <probability> (default: %f)", DefProbabilityPull);
+        yInfo("--probability_push <probability> (default: %f)", DefProbabilityPush);
+        yInfo("--probability_put_left <probability> (default: %f)", DefProbabilityPutLeft);
+        yInfo("--probability_put_right <probability> (default: %f)", DefProbabilityPutRight);
+        yInfo("--probability_take_left <probability> (default: %f)", DefProbabilityTakeLeft);
+        yInfo("--probability_take_right <probability> (default: %f)", DefProbabilityTakeRight);
+        yInfo("--probability_vision_object <probability> (default: %f)", DefProbabilityVisionObject);
+        yInfo(" ");
+        yInfo("Geometric thresholds:");
+        yInfo("--reachable_threshold_x <meters> (default: %f)", DefReachableThresholdX);
+        yInfo("--reachable_threshold_y_left <meters> (default: %f)", DefReachableThresholdYLeft);
+        yInfo("--reachable_threshold_y_right <meters> (default: %f)", DefReachableThresholdYRight);
         return 0; // EXIT_SUCCESS
     }
 

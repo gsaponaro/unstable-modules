@@ -219,16 +219,16 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
 /**********************************************************/
 void DummyActivityInterfaceThread::getParameters()
 {
-    probability_grasp_tool_left = rf.check("probability_grasp_tool_left",Value(1.0)).asDouble();
-    probability_grasp_tool_right = rf.check("probability_grasp_tool_right",Value(1.0)).asDouble();
-    probability_perceive_grasp = rf.check("probability_perceive_grasp",Value(1.0)).asDouble();
-    probability_pull = rf.check("probability_pull",Value(1.0)).asDouble();
-    probability_push = rf.check("probability_push",Value(1.0)).asDouble();
-    probability_put_left = rf.check("probability_put_left",Value(1.0)).asDouble();
-    probability_put_right = rf.check("probability_put_right",Value(1.0)).asDouble();
-    probability_take_left = rf.check("probability_take_left",Value(1.0)).asDouble();
-    probability_take_right = rf.check("probability_take_right",Value(1.0)).asDouble();
-    probability_vision_object = rf.check("probability_vision_object",Value(1.0)).asDouble();
+    probability_grasp_tool_left = rf.check("probability_grasp_tool_left",Value(DefProbabilityGraspToolLeft)).asDouble();
+    probability_grasp_tool_right = rf.check("probability_grasp_tool_right",Value(DefProbabilityGraspToolRight)).asDouble();
+    probability_perceive_grasp = rf.check("probability_perceive_grasp",Value(DefProbabilityPerceiveGrasp)).asDouble();
+    probability_pull = rf.check("probability_pull",Value(DefProbabilityPull)).asDouble();
+    probability_push = rf.check("probability_push",Value(DefProbabilityPush)).asDouble();
+    probability_put_left = rf.check("probability_put_left",Value(DefProbabilityPutLeft)).asDouble();
+    probability_put_right = rf.check("probability_put_right",Value(DefProbabilityPutRight)).asDouble();
+    probability_take_left = rf.check("probability_take_left",Value(DefProbabilityTakeLeft)).asDouble();
+    probability_take_right = rf.check("probability_take_right",Value(DefProbabilityTakeRight)).asDouble();
+    probability_vision_object = rf.check("probability_vision_object",Value(DefProbabilityVisionObject)).asDouble();
 
     enforceProbabilityBounds(probability_grasp_tool_left);
     enforceProbabilityBounds(probability_grasp_tool_right);
@@ -241,9 +241,9 @@ void DummyActivityInterfaceThread::getParameters()
     enforceProbabilityBounds(probability_take_right);
     enforceProbabilityBounds(probability_vision_object);
 
-    reachable_threshold_x = rf.check("reachable_threshold_x",Value(-0.48)).asDouble();
-    reachable_threshold_y_left = rf.check("reachable_threshold_y_left",Value(-0.15)).asDouble();
-    reachable_threshold_y_right = rf.check("reachable_threshold_y_right",Value(0.15)).asDouble();
+    reachable_threshold_x = rf.check("reachable_threshold_x",Value(DefReachableThresholdX)).asDouble();
+    reachable_threshold_y_left = rf.check("reachable_threshold_y_left",Value(DefReachableThresholdYLeft)).asDouble();
+    reachable_threshold_y_right = rf.check("reachable_threshold_y_right",Value(DefReachableThresholdYRight)).asDouble();
 
     yInfo("probability_grasp_tool_left %f", probability_grasp_tool_left);
     yInfo("probability_grasp_tool_right %f", probability_grasp_tool_right);

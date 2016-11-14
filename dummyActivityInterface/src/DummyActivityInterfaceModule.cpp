@@ -21,6 +21,10 @@ bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
     moduleName = rf.check("name", Value("activityInterface")).asString();
     setName(moduleName.c_str());
 
+    modulePeriod = rf.check("period", Value(DefModulePeriod)).asDouble();
+    if (modulePeriod != DefModulePeriod)
+        yInfo("started module with a period of %.2f seconds", modulePeriod);
+
     handlerPortName = "/" + moduleName + "/rpc:i";
     handlerPort.open(handlerPortName.c_str());
     attach(handlerPort);
