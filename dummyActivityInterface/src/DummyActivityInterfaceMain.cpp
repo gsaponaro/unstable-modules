@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
         yInfo("Basic options:");
         yInfo("--name <port prefix> (default %s)", DefModuleName.c_str());
-        yInfo("--period <period in seconds> (default %f)", DefModulePeriod);
+        yInfo("--period <milliseconds> (default %d)", DefThreadPeriod);
         yInfo(" ");
         yInfo("Noise options (the probability of success ranges from %f to %f", LowerBound, UpperBound);
         yInfo("--probability_grasp_tool_left <probability> (default: %f)", DefProbabilityGraspToolLeft);

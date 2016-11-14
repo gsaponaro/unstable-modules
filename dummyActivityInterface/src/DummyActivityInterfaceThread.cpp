@@ -27,7 +27,7 @@ using namespace yarp::os;
 DummyActivityInterfaceThread::DummyActivityInterfaceThread(
     const string &_moduleName,
     ResourceFinder &_rf)
-    : RateThread(DefThreadPeriod),
+    : RateThread(DefThreadPeriod), // initial default period
       moduleName(_moduleName),
       rf(_rf)
 {
@@ -98,23 +98,22 @@ bool DummyActivityInterfaceThread::threadInit()
 /**********************************************************/
 void DummyActivityInterfaceThread::run()
 {
-    while (!closing)
-        mainProcessing();
+    if (!closing)
+    {
+        // TODO: use callback
+        Bottle *pradaInput;
+        pradaInput = pradaInputPort.read();
+        if (pradaInput != NULL)
+            processPradaStatus(*pradaInput);
+    }
 }
 
 /**********************************************************/
-void DummyActivityInterfaceThread::mainProcessing()
+void DummyActivityInterfaceThread::delayAfterMotor()
 {
-    yarp::os::Time::delay(0.01);
-
-    // TODO: use callback
-    Bottle *pradaInput;
-    pradaInput = pradaInputPort.read();
-    if (pradaInput != NULL)
-        processPradaStatus(*pradaInput);
-
-    if (closing)
-        return;
+    int s = static_cast<int>(getRate())/1000;
+    yDebug("delaying %d seconds...", s);
+    yarp::os::Time::delay(s);
 }
 
 /**********************************************************/
@@ -661,6 +660,8 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
                  noise, probability_grasp_tool);
     }
 
+    delayAfterMotor();
+
     return true;
 }
 
@@ -863,6 +864,8 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
         robotActions[robotActions.size()-1].outcome = Failure;
         yWarning("did not drop %s", objName.c_str());
     }
+
+    delayAfterMotor();
 
     return true;
 }
@@ -1192,6 +1195,8 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
                  noise, probability_pull);
     }
 
+    delayAfterMotor();
+
     return true;
 }
 
@@ -1276,6 +1281,8 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
                  objName.c_str(), toolName.c_str(),
                  noise, probability_push);
     }
+
+    delayAfterMotor();
 
     return true;
 }
@@ -1387,6 +1394,8 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
                      noise, probability_put);
         }
     }
+
+    delayAfterMotor();
 
     return true;
 }
@@ -1557,6 +1566,8 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
                  objName.c_str(), handName.c_str(),
                  noise, probability_take);
     }
+
+    delayAfterMotor();
 
     return true;
 }

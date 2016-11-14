@@ -88,8 +88,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         bool threadInit();
         void run();
 
-        void mainProcessing();
-
+        void delayAfterMotor();
         void enforceProbabilityBounds(double &n);
         yarp::os::Bottle getMemoryBottle();
         void getParameters();

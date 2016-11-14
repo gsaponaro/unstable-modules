@@ -11,8 +11,7 @@
 
 #include <string>
 
-const double      DefModulePeriod = 0.0; // [s]
-const int         DefThreadPeriod = 33;  // [ms]
+const int         DefThreadPeriod = 33; // [ms]
 const std::string DefModuleName   = "activityInterface";
 
 const std::string Success = "SUCCESS";

@@ -25,7 +25,6 @@ class DummyActivityInterfaceModule : public yarp::os::RFModule,
         // module parameters
         std::string moduleName;
         std::string handlerPortName;
-        double modulePeriod;
         yarp::os::RpcServer handlerPort;
         bool closing;
 

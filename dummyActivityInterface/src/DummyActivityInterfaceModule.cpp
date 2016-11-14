@@ -23,10 +23,6 @@ bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
     moduleName = rf.check("name", Value("activityInterface")).asString();
     setName(moduleName.c_str());
 
-    modulePeriod = rf.check("period", Value(DefModulePeriod)).asDouble();
-    if (modulePeriod != DefModulePeriod)
-        yInfo("started module with a period of %.2f seconds", modulePeriod);
-
     handlerPortName = "/" + moduleName + "/rpc:i";
     handlerPort.open(handlerPortName.c_str());
     attach(handlerPort);
@@ -42,6 +38,13 @@ bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
     {
         delete thread;
         return false;
+    }
+
+    if (rf.check("period"))
+    {
+        int period = rf.find("period").asInt();
+        yInfo("setting thread period to %d ms", period);
+        thread->setRate(period);
     }
 
     return true;
