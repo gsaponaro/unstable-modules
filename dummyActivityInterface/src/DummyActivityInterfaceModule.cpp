@@ -9,6 +9,8 @@
  *
  */
 
+#include <yarp/os/Log.h>
+
 #include "Defaults.h"
 #include "DummyActivityInterfaceModule.h"
 
