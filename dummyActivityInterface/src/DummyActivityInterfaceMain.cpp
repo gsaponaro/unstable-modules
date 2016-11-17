@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     Network yarp;
 
     ResourceFinder rf;
-    rf.setVerbose(false);
+    rf.setVerbose(true);
     rf.setDefaultContext("poeticon");    // overridden by --context
     rf.setDefaultConfigFile("dummyActivityInterface.ini");  // overridden by --from
     rf.configure(argc, argv);
