@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator, Deterministic</name>
+<name>Planner Simulator, Deterministic without Heuristics</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>
@@ -7,11 +7,14 @@
 
 <module>
     <name>lbpExtract</name>
+    !<-- replace with - -context poeticon - -from dummy_segmentation_DATASET.ini (if different from default) -->
     <parameters>--radius 7 --maxArea 6000 --maxArcLength 600</parameters>
     <node>localhost</node>
 </module>
 <module>
     <name>dummyActivityInterface</name>
+    <!-- replace with - -from dummy_activity_DATASET.ini (symlink to desired robot reliability params) -->
+    <parameters></parameters>
     <node>localhost</node>
 </module>
 <module>

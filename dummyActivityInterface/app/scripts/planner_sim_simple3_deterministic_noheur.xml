@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator, Deterministic</name>
+<name>Planner Simulator, Deterministic without Heuristics</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>
