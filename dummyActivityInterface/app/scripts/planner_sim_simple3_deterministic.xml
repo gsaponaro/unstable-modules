@@ -12,7 +12,7 @@
 </module>
 <module>
     <name>dummyActivityInterface</name>
-    <parameters>--context poeticon --from dummy_activity_simple3.ini</parameters>
+    <parameters>--from dummy_activity_simple3.ini</parameters>
     <node>localhost</node>
 </module>
 <module>
