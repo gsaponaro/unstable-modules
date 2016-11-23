@@ -894,7 +894,7 @@ bool DummyActivityInterfaceThread::dump()
             yDebug("%-26s %s", robotActions[a].action.c_str(), robotActions[a].outcome.c_str());
 
         yDebug("==================================");
-        yDebug("successful=%d attempted=%lu (success rate %.2f)",
+        yDebug("successful=%d attempted=%lu (success rate %.4f)",
                robotActionsSuccessful, robotActions.size(), successRate);
     }
 
