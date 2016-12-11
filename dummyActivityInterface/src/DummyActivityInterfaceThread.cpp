@@ -1520,6 +1520,11 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         return false;
     }
 
+    if (! validateName(objName))
+    {
+        return false;
+    }
+
     if (handName != "left" && handName != "right")
     {
         yError("hand name %s not recognized: must be left or right", handName.c_str());
