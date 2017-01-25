@@ -14,6 +14,7 @@
 #include <iostream> // __func__
 #include <string>
 
+//#include <yarp/dev/CartesianControl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/GazeControl.h>
 #include <yarp/dev/IEncoders.h>
@@ -23,14 +24,14 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
+//#include <yarp/os/LogStream.h>
 #include <yarp/os/Mutex.h>
-#include <yarp/os/Port.h>
+//#include <yarp/os/Port.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/os/RpcClient.h>
+//#include <yarp/os/RpcClient.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Vocab.h>
+//#include <yarp/os/Vocab.h>
 #include <yarp/sig/Vector.h>
 
 // make sure __func__ is set correctly, http://stackoverflow.com/a/17528983
@@ -48,14 +49,21 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         std::string moduleName;
         yarp::os::ResourceFinder rf;
         bool closing;
-
         std::string robotName;
+        int repetitions;
+        //int startup_context_id_gaze;
+        yarp::os::Mutex mutex;
 
         yarp::dev::PolyDriver *drvHead;
         yarp::dev::PolyDriver *drvGazeCtrl;
+
         yarp::dev::IEncoders *encHead;
         yarp::dev::IPositionControl *headPosCtrl;
+
         yarp::dev::IGazeControl *gazeCtrl;
+
+        //yarp::dev::IControlMode2 *modeHead;
+
         yarp::sig::Vector head;
 
         //IControlMode2     *modeTorso;

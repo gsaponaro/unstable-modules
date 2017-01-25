@@ -40,6 +40,7 @@ class GesturesRenderingEngineModule : public yarp::os::RFModule,
         virtual double getPeriod();
 
         // IDL functions
+        bool attach(yarp::os::RpcServer &source);
         bool do_nod();
         bool do_punch();
         bool do_lookout();

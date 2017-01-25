@@ -76,6 +76,11 @@ double GesturesRenderingEngineModule::getPeriod()
 }
 
 // IDL functions
+bool GesturesRenderingEngineModule::attach(yarp::os::RpcServer &source)
+{
+    return this->yarp().attachAsServer(source);
+}
+
 bool GesturesRenderingEngineModule::do_nod()
 {
     return thread->do_nod();
