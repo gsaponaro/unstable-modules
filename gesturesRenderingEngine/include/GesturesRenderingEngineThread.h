@@ -56,23 +56,26 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
 
         yarp::dev::PolyDriver *drvHead;
         yarp::dev::PolyDriver *drvGazeCtrl;
-
         yarp::dev::IEncoders *encHead;
         yarp::dev::IPositionControl *headPosCtrl;
-
         yarp::dev::IGazeControl *gazeCtrl;
-
         //yarp::dev::IControlMode2 *modeHead;
-
         yarp::sig::Vector head;
 
         //IControlMode2     *modeTorso;
         //IPositionControl  *posTorso;
 
-        //IEncoders         *encArm;
+        yarp::dev::PolyDriver *drvLeftArm;
+        yarp::dev::IEncoders *encArm;
         //IControlMode2     *modeArm;
-        //IPositionControl  *posArm;
+        yarp::dev::IPositionControl *posArm;
         //ICartesianControl *cartArm;
+        yarp::sig::Vector arm; // obsolete?
+        void moveArm(const int action);
+
+        void openHand();
+        void closeHand();
+        void moveHand(const int action);
 
         void steerHeadToHome();
 
