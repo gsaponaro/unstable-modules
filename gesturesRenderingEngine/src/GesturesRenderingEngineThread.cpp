@@ -218,6 +218,7 @@ bool GesturesRenderingEngineThread::threadInit()
     if (!drvHead->isValid() || !drvLeftArm->isValid() || !drvGazeCtrl->isValid())
     {
         yError("Problem configuring drivers");
+        close();
         return false;
     }
 
@@ -228,6 +229,7 @@ bool GesturesRenderingEngineThread::threadInit()
     if (!ok)
     {
         yError("problem acquiring head interfaces");
+        close();
         return false;
     }
 
@@ -238,6 +240,7 @@ bool GesturesRenderingEngineThread::threadInit()
     if (!ok)
     {
         yError("problem acquiring left_arm interfaces");
+        close();
         return false;
     }
 
@@ -247,15 +250,15 @@ bool GesturesRenderingEngineThread::threadInit()
     if (gazeCtrl == NULL)
     {
         yError("problem with gaze interface when initializing IGazeControl");
+        close();
         return false;
     }
     if (!ok)
     {
         yError("problem acquiring gaze interfaces");
+        close();
         return false;
     }
-
-    ok = true;
 
     // initialize control variables
     headAxes = 0;
@@ -488,7 +491,8 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     posArmInit[1]  =  30.0;
     posArmInit[3]  =  60.0; // different from punch
     posArmInit[8]  =  20.0;
-    posArmInit[9]  =  25.0;
+    //posArmInit[9]  =  25.0;
+    posArmInit[9]  =  35.0; // 2017
     posArmInit[10] =  40.0;
     posArmInit[11] =  50.0;
     posArmInit[12] =  40.0;
@@ -508,12 +512,14 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     posArmFin[1]   = posArmInit[1];
     posArmFin[2]   = posArmInit[2];
     posArmFin[3]   = posArmInit[3];
-    posArmFin[4]   =  -50.0;
+    //posArmFin[4]   =  -50.0;
+    posArmFin[4]   =  -20.0; // 2017
     posArmFin[5]   = posArmInit[5];
     posArmFin[6]   = posArmInit[6];
     posArmFin[7]   = posArmInit[7];
     posArmFin[8]   =  -10.0;
-    posArmFin[9]   = posArmInit[9];
+    //posArmFin[9]   = posArmInit[9];
+    posArmFin[9]   =   25.0;
     posArmFin[10]  =    0.0;
     posArmFin[11]  = posArmInit[11];
     posArmFin[12]  = posArmInit[12];
@@ -540,7 +546,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
         posArm->setRefSpeeds(velArmFin.data());
         posArm->positionMove(posArmFin.data());  
 
-        Time::delay(timing);
+        Time::delay(timing*1.2); // increased in 2017
     }
 
     steerArmToHome();
@@ -564,7 +570,8 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
 
     Vector posArmInit(16); // should not be hardcoded
     posArmInit     =   0.0;
-    posArmInit[0]  = -10.0;
+    //posArmInit[0]  = -10.0;
+    posArmInit[0]  = -20.0; // safer
     posArmInit[1]  =  30.0;
     posArmInit[3]  =  80.0;
     posArmInit[8]  =  20.0;
@@ -586,8 +593,10 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     Vector posArmFin(16);
     posArmFin      =    0.0;
     posArmFin[0]   = posArmInit[0];
-    posArmFin[1]   = posArmInit[1];
-    posArmFin[2]   = posArmInit[2];
+    //posArmFin[1]   = posArmInit[1];
+    posArmFin[1]   =   40.0; // 2017
+    //posArmFin[2]   = posArmInit[2];
+    posArmFin[2]   =   13.3; // 2017
     posArmFin[3]   = posArmInit[3];
     posArmFin[4]   =   90.0;
     posArmFin[5]   = posArmInit[5];
@@ -621,7 +630,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
         posArm->setRefSpeeds(velArmFin.data());
         posArm->positionMove(posArmFin.data());  
 
-        Time::delay(timing);
+        Time::delay(timing*1.2); // increased in 2017
     }
 
     steerArmToHome();
