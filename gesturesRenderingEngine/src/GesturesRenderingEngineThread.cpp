@@ -179,23 +179,14 @@ bool GesturesRenderingEngineThread::threadInit()
     robotName = rf.check("robot",Value(DefRobot.c_str())).asString().c_str();
     repetitions = rf.check("repetitions",Value(DefRepetitions)).asInt();
 
-    // open remote_controlboard drivers
+    // open head remote_controlboard driver
     Property optHead("(device remote_controlboard)");
     optHead.put("remote",("/"+robotName+"/head").c_str());
     optHead.put("local",("/"+moduleName+"/head").c_str());
     drvHead = new PolyDriver;
     if (!drvHead->open(optHead))
     {
-        close();
-        return false;
-    }
-
-    Property optLeftArm("(device remote_controlboard)");
-    optLeftArm.put("remote",("/"+robotName+"/left_arm").c_str());
-    optLeftArm.put("local",("/"+moduleName+"/left_arm").c_str());
-    drvLeftArm = new PolyDriver;
-    if (!drvLeftArm->open(optLeftArm))
-    {
+        yError("Position head controller not available");
         close();
         return false;
     }
@@ -205,56 +196,68 @@ bool GesturesRenderingEngineThread::threadInit()
     optGazeCtrl.put("remote","/iKinGazeCtrl");
     optGazeCtrl.put("local",("/"+moduleName+"/gaze").c_str());
     drvGazeCtrl = new PolyDriver;
-
     if (!drvGazeCtrl->open(optGazeCtrl))
     {
+        yError("Gaze controller not available");
         close();
         return false;
     }
 
-    gazeCtrl = NULL;
-    if (drvGazeCtrl->isValid()) {
-        drvGazeCtrl->view(gazeCtrl);
-        drvGazeCtrl->view(modeHead);
+    // open left_arm remote_controlboard driver
+    Property optLeftArm("(device remote_controlboard)");
+    optLeftArm.put("remote",("/"+robotName+"/left_arm").c_str());
+    optLeftArm.put("local",("/"+moduleName+"/left_arm").c_str());
+    drvLeftArm = new PolyDriver;
+    if (!drvLeftArm->open(optLeftArm))
+    {
+        yError("Position left_arm controller not available");
+        close();
+        return false;
     }
 
+    if (!drvHead->isValid() || !drvLeftArm->isValid() || !drvGazeCtrl->isValid())
+    {
+        yError("Problem configuring drivers");
+        return false;
+    }
+
+    // open head device views
+    bool ok = true;
+    ok = ok && drvHead->view(encHead);
+    ok = ok && drvHead->view(headPosCtrl);
+    if (!ok)
+    {
+        yError("problem acquiring head interfaces");
+        return false;
+    }
+
+    // open left_arm device views
+    ok = ok && drvLeftArm->view(encArm);
+    ok = ok && drvLeftArm->view(posArm);
+    //ok = ok && drvLeftArm->view(modeArm);
+    if (!ok)
+    {
+        yError("problem acquiring left_arm interfaces");
+        return false;
+    }
+
+    // open gaze device views
+    ok = ok && drvGazeCtrl->view(gazeCtrl);
+    //ok = ok && drvGazeCtrl->view(modeHead);
     if (gazeCtrl == NULL)
     {
         yError("problem with gaze interface when initializing IGazeControl");
         return false;
     }
-
-    // open views
-    bool ok = true;
-    ok = ok && drvHead->view(encHead);
-    ok = ok && drvHead->view(headPosCtrl);
-    ok = ok && drvHead->view(modeHead);
-
-    ok = ok && drvLeftArm->view(encArm);
-    ok = ok && drvLeftArm->view(posArm);
-    ok = ok && drvLeftArm->view(modeArm);
-
-
-    /*
-    if (drvGazeCtrl->isValid())
-    {
-        ok = ok && drvGazeCtrl->view(gazeCtrl);
-    }
-    else
-    {
-        yError("problem with gaze interface when obtaining a view");
-        return false;
-    }
-    */
-    //ok = ok && drvGazeCtrl->view(gazeCtrl);
-
     if (!ok)
     {
-        yError("problem acquiring interfaces");
+        yError("problem acquiring gaze interfaces");
         return false;
     }
 
-    // init
+    ok = true;
+
+    // initialize control variables
     headAxes = 0;
     encHead->getAxes(&headAxes);
     const int expectedHeadAxes = 6;
@@ -285,14 +288,19 @@ bool GesturesRenderingEngineThread::threadInit()
     armHomeVels = 10.0;
 
     armLowPoss.resize(7, 0.0);
-    armLowPoss[0]=-10.0; armLowPoss[1]=30.0; armLowPoss[2]=100.0;
+    armLowPoss[0]=-10.0; armLowPoss[1]=30.0;
+    //armLowPoss[2]=100.0;
+    armLowPoss[2]=0.0; // safer
 
     armLowVels.resize(7, 0.0);
     armLowVels[0]=armLowVels[3]=20.0;
     armLowVels[1]=armLowVels[2]=armLowVels[4]=armLowVels[5]=armLowVels[6]=10.0;
 
     armFrontPoss.resize(7, 0.0);
-    armFrontPoss[0]=-70.0; armFrontPoss[1]=20.0; armFrontPoss[3]=30.0;
+    armFrontPoss[0]=-70.0;
+    //armFrontPoss[1]=20.0;
+    armFrontPoss[1]=25.0; // safer
+    armFrontPoss[3]=30.0;
 
     armFrontVels.resize(7, 0.0);
     armFrontVels = 10.0;
@@ -312,6 +320,7 @@ bool GesturesRenderingEngineThread::threadInit()
     //for(int i=0; i<armAxes; i++)
     //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
 
+    // start control
     steerHeadToHome();
     steerArmToHome();
 
