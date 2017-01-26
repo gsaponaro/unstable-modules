@@ -83,14 +83,14 @@ void GesturesRenderingEngineThread::steerHeadToHome()
 
     yDebug("homing head...");
 
-    for(int i=0; i<headAxes; i++)
-        modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
+    //for(int i=0; i<headAxes; i++)
+    //    modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
 
     gazeCtrl->lookAtFixationPoint(homeHead);
     gazeCtrl->waitMotionDone();
 
-    for(int i=0; i<headAxes; i++)
-        modeHead->setControlMode(i,VOCAB_CM_POSITION);
+    //for(int i=0; i<headAxes; i++)
+    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
 
     yDebug("...done");
 }
@@ -276,6 +276,7 @@ bool GesturesRenderingEngineThread::threadInit()
     gazeCtrl->setNeckTrajTime(2.0);
     gazeCtrl->setEyesTrajTime(1.0);
     gazeCtrl->setTrackingMode(false); // tracking mode: torso moves => gaze compensates
+    gazeCtrl->setSaccadesMode(false);
 
     armHomePoss.resize(7, 0.0);
     armHomePoss[0]=-30.0; armHomePoss[1]=30.0; armHomePoss[2]=45.0;
@@ -308,8 +309,8 @@ bool GesturesRenderingEngineThread::threadInit()
     handVels = 20.0;
     handVels[0]=10.0;
 
-    for(int i=0; i<armAxes; i++)
-        modeArm->setControlMode(i,VOCAB_CM_POSITION);
+    //for(int i=0; i<armAxes; i++)
+    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
 
     steerHeadToHome();
     steerArmToHome();
@@ -431,8 +432,8 @@ bool GesturesRenderingEngineThread::do_lookout()
     fp[2] = +0.35;    // z-component [m]
 
     // TODO: remove if redundant
-    for(int i=0; i<headAxes; i++)
-        modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
+    //for(int i=0; i<headAxes; i++)
+    //    modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
 
     for (int times=0; times<repetitions; times++)
     {
@@ -452,8 +453,8 @@ bool GesturesRenderingEngineThread::do_lookout()
 
     steerHeadToHome();
 
-    for(int i=0; i<headAxes; i++)
-        modeHead->setControlMode(i,VOCAB_CM_POSITION);
+    //for(int i=0; i<headAxes; i++)
+    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
 
     yInfo("...done");
 
