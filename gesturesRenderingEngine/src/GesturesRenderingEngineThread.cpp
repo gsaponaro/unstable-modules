@@ -190,16 +190,6 @@ bool GesturesRenderingEngineThread::threadInit()
         return false;
     }
 
-    /*
-    Property optCartLeftArm("(device cartesiancontrollerclient)");
-    optCartLeftArm.put("remote",("/"+robotName+"/cartesianController/left_arm").c_str());
-    optCartLeftArm.put("local",("/"+moduleName+"/left_arm/cartesian").c_str());
-
-    Property optCartRightArm("(device cartesiancontrollerclient)");
-    optCartRightArm.put("remote",("/"+robotName+"/cartesianController/right_arm").c_str());
-    optCartRightArm.put("local",("/"+moduleName+"/right_arm/cartesian").c_str());
-    */
-
     // open views
     bool ok = true;
     ok = ok && drvHead->view(encHead);
@@ -209,25 +199,22 @@ bool GesturesRenderingEngineThread::threadInit()
     ok = ok && drvLeftArm->view(encArm);
     ok = ok && drvLeftArm->view(posArm);
 
-    ok = ok && drvGazeCtrl->view(gazeCtrl);
-
-    if (!ok)
-    {
-        yError("problem acquiring interfaces");
-        return false;
-    }
-
-    /*
     if (drvGazeCtrl->isValid())
     {
-        drvGazeCtrl->view(gazeCtrl);
+        ok = ok && drvGazeCtrl->view(gazeCtrl);
     }
     else
     {
         yError("problem with gaze interface when obtaining a view");
         return false;
     }
-    */
+    //ok = ok && drvGazeCtrl->view(gazeCtrl);
+
+    if (!ok)
+    {
+        yError("problem acquiring interfaces");
+        return false;
+    }
 
     if (gazeCtrl == NULL)
     {
@@ -256,9 +243,6 @@ bool GesturesRenderingEngineThread::threadInit()
     const int expectedArmAxes = 16;
     if (armAxes != expectedArmAxes)
         yWarning("got %d arm axes, was expecting %d", armAxes, expectedArmAxes);
-
-    arm.resize(armAxes, 0.0);
-    posArm->getAxes(&armAxes);
 
     //gazeCtrl->storeContext(&startup_context_id_gaze);
     //gazeCtrl->restoreContext(0);
@@ -353,8 +337,6 @@ bool GesturesRenderingEngineThread::do_nod()
         Time::delay(t_j0);
     }
 
-//  Time::delay(t_j0);
-//  steerHeadToHome();
     head[0] = init_j0;
     headPosCtrl->positionMove(head.data());
 

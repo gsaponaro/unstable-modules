@@ -73,7 +73,6 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         //IControlMode2     *modeArm;
         yarp::dev::IPositionControl *posArm;
         //ICartesianControl *cartArm;
-        yarp::sig::Vector arm; // obsolete?
 
         yarp::sig::Vector armHomePoss, armHomeVels, armLowPoss, armLowVels, armFrontPoss, armFrontVels;
         yarp::sig::Vector handOpenPoss, handPunchPoss, handVels;
