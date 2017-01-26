@@ -21,13 +21,12 @@ using namespace yarp::sig;
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToHome()
 {
-    //for(int i=0; i<armAxes; i++)
-    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
-
-    // TODO: use posArm instead
+     // TODO: use posArm instead
     IPositionControl *armPosCtrl;
 
     drvLeftArm->view(armPosCtrl);
+
+    yInfo("homing arm...");
 
     for (int j=0; j<armHomeVels.length(); j++)
     {
@@ -36,13 +35,12 @@ void GesturesRenderingEngineThread::steerArmToHome()
     }
 
     openHand();
+
+    yInfo("...done homing arm");
 }
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToLow()
 {
-    //for(int i=0; i<armAxes; i++)
-    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
-
     // TODO: use posArm instead
     IPositionControl *armPosCtrl;
 
@@ -58,9 +56,6 @@ void GesturesRenderingEngineThread::steerArmToLow()
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToFront()
 {
-    //for(int i=0; i<armAxes; i++)
-    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
-
     IPositionControl *armPosCtrl;
 
     drvLeftArm->view(armPosCtrl);
@@ -81,18 +76,12 @@ void GesturesRenderingEngineThread::steerHeadToHome()
     homeHead[1] =  0.0;
     homeHead[2] =  0.3;
 
-    yDebug("homing head...");
-
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
+    yInfo("homing head...");
 
     gazeCtrl->lookAtFixationPoint(homeHead);
-    //gazeCtrl->waitMotionDone();
+    gazeCtrl->waitMotionDone();
 
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
-
-    yDebug("...done");
+    yInfo("...done homing head");
 }
 
 /**********************************************************/
@@ -110,9 +99,7 @@ void GesturesRenderingEngineThread::closeHand()
 /**********************************************************/
 void GesturesRenderingEngineThread::moveHand(const int action)
 {
-    //for(int i=0; i<armAxes; i++)
-    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
-
+    // TODO: use posArm instead
     IPositionControl *armPosCtrl;
     Vector *poss = NULL;
 
@@ -154,15 +141,25 @@ GesturesRenderingEngineThread::GesturesRenderingEngineThread(
     drvHead = NULL;
     drvGazeCtrl = NULL;
     headPosCtrl = NULL;
-    //modeHead = NULL;
+    modeHead = NULL;
     drvLeftArm = NULL;
 }
 
 /**********************************************************/
 void GesturesRenderingEngineThread::close()
 {
+    steerHeadToHome();
+    steerArmToHome();
+
+    Time::delay(1.0);
+
+    drvHead->close();
+    drvGazeCtrl->close();
+    drvLeftArm->close();
+
     if (drvHead) delete drvHead;
     if (drvGazeCtrl) delete drvGazeCtrl;
+    if (drvLeftArm) delete drvLeftArm;
 
     return;
 }
@@ -224,9 +221,9 @@ bool GesturesRenderingEngineThread::threadInit()
 
     // open head device views
     bool ok = true;
-    ok = ok && drvHead->view(encHead);
     ok = ok && drvHead->view(headPosCtrl);
-    //ok = ok && drvHead->view(modeHead);
+    ok = ok && drvHead->view(encHead);
+    ok = ok && drvHead->view(modeHead);
     if (!ok)
     {
         yError("problem acquiring head interfaces");
@@ -269,9 +266,11 @@ bool GesturesRenderingEngineThread::threadInit()
 
     head.resize(headAxes, 0.0);
 
-    Vector velHead(headAxes);
-    velHead = 10.0;
+    velHead.resize(headAxes, 10.0);
     headPosCtrl->setRefSpeeds(velHead.data());
+
+    accHead.resize(headAxes, 50.0);
+    headPosCtrl->setRefAccelerations(accHead.data());
 
     armAxes = 0;
     encArm->getAxes(&armAxes);
@@ -320,9 +319,6 @@ bool GesturesRenderingEngineThread::threadInit()
     handVels = 20.0;
     handVels[0]=10.0;
 
-    //for(int i=0; i<armAxes; i++)
-    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
-
     // start control
     steerHeadToHome();
     steerArmToHome();
@@ -352,30 +348,52 @@ bool GesturesRenderingEngineThread::do_nod()
 
     steerHeadToHome();
 
-    /*
-    if (robotName == "icub")
-    {
-        yDebug() << __func__ << "setting position control mode";
-        for(int i=0; i<headAxes; i++)
-            modeHead->setControlMode(i,VOCAB_CM_POSITION);
+    // try to set position control mode
+    yInfo("setting position control mode...");
+    for(int i=0; i<headAxes; i++)
+        modeHead->setControlMode(i,VOCAB_CM_POSITION);
 
-        yDebug() << __func__ << "setting velocities";
-        Vector velHead(headAxes);
-        velHead = 10.0;
-        headPosCtrl->setRefSpeeds(velHead.data());
+    // wait a bit
+    Time::delay(1.0);
+
+    // check if position control mode was successfully set
+    bool gotPositionControlMode = true;
+    VectorOf<int> currHeadModes(headAxes);
+    modeHead->getControlModes(currHeadModes.getFirst());
+    for (size_t i=0; i<currHeadModes.size(); ++i)
+    {
+        if (currHeadModes[i] != VOCAB_CM_POSITION)
+        {
+            yWarning("joint %lu is not VOCAB_CM_POSITION as required", i);
+            gotPositionControlMode = false;
+        }
     }
-    */
+
+    // if we were unsuccessful in setting position control, abort
+    if (gotPositionControlMode)
+    {
+        yInfo("...successfully set position control mode");
+    }
+    else
+    {
+        yWarning("...failed to set set position control mode, aborting nod action, be careful");
+        return false;
+    }
 
     // read current joint values and save them in head variable
     encHead->getEncoders(head.data());
-    yDebug() << __func__ << "initially head =" << head.toString();
 
-    double init_j0 = head[0];
+    headPosCtrl->setRefSpeeds(velHead.data());
+    headPosCtrl->setRefAccelerations(accHead.data());
+
+    //was: double init_j0 = head[0];
+    double init_j0 = 0.0;
 
     // parameter
     double final_j0 = -35.0;
 
-    double t_j0 = 2.0;
+    //double t_j0 = 2.0;
+    double t_j0 = 5.0; // temporarily increased in 2017 for safety
 
     for (int times=0; times<repetitions; times++)
     {
@@ -385,7 +403,6 @@ bool GesturesRenderingEngineThread::do_nod()
         Time::delay(t_j0);
 
         head[0] = final_j0;
-        yDebug() << __func__ << "moving j0 to" << head[0];
         headPosCtrl->positionMove(head.data());
 
         Time::delay(t_j0);
@@ -403,16 +420,7 @@ bool GesturesRenderingEngineThread::do_nod()
         Time::delay(0.1);
     }
 
-    /*
-    if (robotName == "icub")
-    {
-        yDebug() << __func__ << "setting position-direct control mode";
-        for(int i=0; i<headAxes; i++)
-            modeHead->setControlMode(i,VOCAB_CM_POSITION_DIRECT);
-    }
-    */
-
-    yInfo("...done");
+    yInfo("...done nod action");
 
     return true;
 }
@@ -425,6 +433,8 @@ bool GesturesRenderingEngineThread::do_punch()
 
     double timing = 3.0;
 
+    // TODO: increase velocity
+
     for (int times=0; times<repetitions; times++)
     {
         closeHand();
@@ -433,16 +443,11 @@ bool GesturesRenderingEngineThread::do_punch()
         Time::delay(timing);
         steerArmToFront();
         Time::delay(timing);
-        steerArmToLow();
-        Time::delay(timing);
-        steerArmToFront();
-        Time::delay(timing);
-        steerArmToLow();
     }
 
     steerArmToHome();
 
-    yInfo("...done");
+    yInfo("...done punch action");
 
     return true;
 }
@@ -456,7 +461,6 @@ bool GesturesRenderingEngineThread::do_lookout()
     steerHeadToHome();
 
     double timing = 3.0;
-    //double timing = 2.0; // decreased in 2017
 
     // parameter
     double y_far = -0.60;
@@ -465,10 +469,6 @@ bool GesturesRenderingEngineThread::do_lookout()
     fp[0] = -0.50;    // x-component [m]
     fp[1] = +0.00;    // y-component [m]
     fp[2] = +0.35;    // z-component [m]
-
-    // TODO: remove if redundant
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
 
     for (int times=0; times<repetitions; times++)
     {
@@ -488,10 +488,7 @@ bool GesturesRenderingEngineThread::do_lookout()
 
     steerHeadToHome();
 
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
-
-    yInfo("...done");
+    yInfo("...done lookout action");
 
     return true;
 }
@@ -574,7 +571,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
 
     steerArmToHome();
 
-    yInfo("...done");
+    yInfo("...done thumbs up action");
 
     return true;
 }
@@ -658,7 +655,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
 
     steerArmToHome();
 
-    yInfo("...done");
+    yInfo("...done thumbs down action");
 
     return true;
 }
