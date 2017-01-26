@@ -14,5 +14,6 @@
 const int         DefThreadPeriod = 33; // [ms]
 const std::string DefModuleName   = "gesturesRenderingEngine";
 const std::string DefRobot        = "icub";
+const int         DefRepetitions  = 2;
 
 #endif

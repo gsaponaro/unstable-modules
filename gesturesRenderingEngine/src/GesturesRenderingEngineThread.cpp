@@ -21,6 +21,10 @@ using namespace yarp::sig;
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToHome()
 {
+    //for(int i=0; i<armAxes; i++)
+    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
+
+    // TODO: use posArm instead
     IPositionControl *armPosCtrl;
 
     drvLeftArm->view(armPosCtrl);
@@ -36,6 +40,10 @@ void GesturesRenderingEngineThread::steerArmToHome()
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToLow()
 {
+    //for(int i=0; i<armAxes; i++)
+    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
+
+    // TODO: use posArm instead
     IPositionControl *armPosCtrl;
 
     drvLeftArm->view(armPosCtrl);
@@ -50,6 +58,9 @@ void GesturesRenderingEngineThread::steerArmToLow()
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToFront()
 {
+    //for(int i=0; i<armAxes; i++)
+    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
+
     IPositionControl *armPosCtrl;
 
     drvLeftArm->view(armPosCtrl);
@@ -70,9 +81,18 @@ void GesturesRenderingEngineThread::steerHeadToHome()
     homeHead[1] =  0.0;
     homeHead[2] =  0.3;
 
-    //yInfo("*** Homing head");
+    yDebug("homing head...");
+
+    for(int i=0; i<headAxes; i++)
+        modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
 
     gazeCtrl->lookAtFixationPoint(homeHead);
+    gazeCtrl->waitMotionDone();
+
+    for(int i=0; i<headAxes; i++)
+        modeHead->setControlMode(i,VOCAB_CM_POSITION);
+
+    yDebug("...done");
 }
 
 /**********************************************************/
@@ -90,6 +110,9 @@ void GesturesRenderingEngineThread::closeHand()
 /**********************************************************/
 void GesturesRenderingEngineThread::moveHand(const int action)
 {
+    //for(int i=0; i<armAxes; i++)
+    //    modeArm->setControlMode(i,VOCAB_CM_POSITION);
+
     IPositionControl *armPosCtrl;
     Vector *poss = NULL;
 
@@ -132,14 +155,12 @@ GesturesRenderingEngineThread::GesturesRenderingEngineThread(
     drvGazeCtrl = NULL;
     headPosCtrl = NULL;
     //modeHead = NULL;
-    //drvLeftArm = NULL;
+    drvLeftArm = NULL;
 }
 
 /**********************************************************/
 void GesturesRenderingEngineThread::close()
 {
-    //gazeCtrl->restoreContext(startup_context_id_gaze); // TODO: move to threadRelease()
-
     if (drvHead) delete drvHead;
     if (drvGazeCtrl) delete drvGazeCtrl;
 
@@ -156,7 +177,7 @@ void GesturesRenderingEngineThread::interrupt()
 bool GesturesRenderingEngineThread::threadInit()
 {
     robotName = rf.check("robot",Value(DefRobot.c_str())).asString().c_str();
-    repetitions = 2;
+    repetitions = rf.check("repetitions",Value(DefRepetitions)).asInt();
 
     // open remote_controlboard drivers
     Property optHead("(device remote_controlboard)");
@@ -184,9 +205,22 @@ bool GesturesRenderingEngineThread::threadInit()
     optGazeCtrl.put("remote","/iKinGazeCtrl");
     optGazeCtrl.put("local",("/"+moduleName+"/gaze").c_str());
     drvGazeCtrl = new PolyDriver;
+
     if (!drvGazeCtrl->open(optGazeCtrl))
     {
         close();
+        return false;
+    }
+
+    gazeCtrl = NULL;
+    if (drvGazeCtrl->isValid()) {
+        drvGazeCtrl->view(gazeCtrl);
+        drvGazeCtrl->view(modeHead);
+    }
+
+    if (gazeCtrl == NULL)
+    {
+        yError("problem with gaze interface when initializing IGazeControl");
         return false;
     }
 
@@ -194,11 +228,14 @@ bool GesturesRenderingEngineThread::threadInit()
     bool ok = true;
     ok = ok && drvHead->view(encHead);
     ok = ok && drvHead->view(headPosCtrl);
-    //ok = ok && drvHead->view(modeHead);
+    ok = ok && drvHead->view(modeHead);
 
     ok = ok && drvLeftArm->view(encArm);
     ok = ok && drvLeftArm->view(posArm);
+    ok = ok && drvLeftArm->view(modeArm);
 
+
+    /*
     if (drvGazeCtrl->isValid())
     {
         ok = ok && drvGazeCtrl->view(gazeCtrl);
@@ -208,6 +245,7 @@ bool GesturesRenderingEngineThread::threadInit()
         yError("problem with gaze interface when obtaining a view");
         return false;
     }
+    */
     //ok = ok && drvGazeCtrl->view(gazeCtrl);
 
     if (!ok)
@@ -216,14 +254,8 @@ bool GesturesRenderingEngineThread::threadInit()
         return false;
     }
 
-    if (gazeCtrl == NULL)
-    {
-        yError("problem with gaze interface when initializing IGazeControl");
-        return false;
-    }
-
     // init
-    int headAxes;
+    headAxes = 0;
     encHead->getAxes(&headAxes);
     const int expectedHeadAxes = 6;
     if (headAxes != expectedHeadAxes)
@@ -231,29 +263,19 @@ bool GesturesRenderingEngineThread::threadInit()
 
     head.resize(headAxes, 0.0);
 
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_MIXED);
-
     Vector velHead(headAxes);
     velHead = 10.0;
     headPosCtrl->setRefSpeeds(velHead.data());
 
-    int armAxes;
+    armAxes = 0;
     encArm->getAxes(&armAxes);
     const int expectedArmAxes = 16;
     if (armAxes != expectedArmAxes)
         yWarning("got %d arm axes, was expecting %d", armAxes, expectedArmAxes);
 
-    //gazeCtrl->storeContext(&startup_context_id_gaze);
-    //gazeCtrl->restoreContext(0);
     gazeCtrl->setNeckTrajTime(2.0);
     gazeCtrl->setEyesTrajTime(1.0);
     gazeCtrl->setTrackingMode(false); // tracking mode: torso moves => gaze compensates
-    //gazeCtrl->setSaccadesMode(false);
-    //gazeCtrl->setStabilizationMode(false);
-    //Bottle info;
-    //gazeCtrl->getInfo(info);
-    //fprintf(stdout,"gaze info = %s\n",info.toString().c_str());
 
     armHomePoss.resize(7, 0.0);
     armHomePoss[0]=-30.0; armHomePoss[1]=30.0; armHomePoss[2]=45.0;
@@ -286,6 +308,9 @@ bool GesturesRenderingEngineThread::threadInit()
     handVels = 20.0;
     handVels[0]=10.0;
 
+    for(int i=0; i<armAxes; i++)
+        modeArm->setControlMode(i,VOCAB_CM_POSITION);
+
     steerHeadToHome();
     steerArmToHome();
 
@@ -313,6 +338,9 @@ bool GesturesRenderingEngineThread::do_nod()
     yInfo("doing nod action...");
 
     steerHeadToHome();
+
+    //for(int i=0; i<headAxes; i++)
+    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
 
     // read current joint values and save them in head variable
     encHead->getEncoders(head.data());
@@ -402,16 +430,20 @@ bool GesturesRenderingEngineThread::do_lookout()
     fp[1] = +0.00;    // y-component [m]
     fp[2] = +0.35;    // z-component [m]
 
+    // TODO: remove if redundant
+    for(int i=0; i<headAxes; i++)
+        modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
+
     for (int times=0; times<repetitions; times++)
     {
         gazeCtrl->lookAtFixationPoint(fp); // move the gaze to the desired fixation point
-        //gazeCtrl->waitMotionDone();        // wait until the operation is done
+        gazeCtrl->waitMotionDone();        // wait until the operation is done
 
         fp[1] = y_far;
         fp[2] = +0.60;
         Time::delay(timing);
         gazeCtrl->lookAtFixationPoint(fp);
-        //gazeCtrl->waitMotionDone();
+        gazeCtrl->waitMotionDone();
 
         Time::delay(timing);
         fp[1] = +0.00;
@@ -419,6 +451,9 @@ bool GesturesRenderingEngineThread::do_lookout()
     }
 
     steerHeadToHome();
+
+    for(int i=0; i<headAxes; i++)
+        modeHead->setControlMode(i,VOCAB_CM_POSITION);
 
     yInfo("...done");
 

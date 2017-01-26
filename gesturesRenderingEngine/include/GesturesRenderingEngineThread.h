@@ -54,7 +54,6 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         bool closing;
         std::string robotName;
         int repetitions;
-        //int startup_context_id_gaze;
         yarp::os::Mutex mutex;
 
         yarp::dev::PolyDriver *drvHead;
@@ -62,17 +61,15 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         yarp::dev::IEncoders *encHead;
         yarp::dev::IPositionControl *headPosCtrl;
         yarp::dev::IGazeControl *gazeCtrl;
-        //yarp::dev::IControlMode2 *modeHead;
+        yarp::dev::IControlMode2 *modeHead;
         yarp::sig::Vector head;
-
-        //IControlMode2     *modeTorso;
-        //IPositionControl  *posTorso;
+        int headAxes;
 
         yarp::dev::PolyDriver *drvLeftArm;
         yarp::dev::IEncoders *encArm;
-        //IControlMode2     *modeArm;
+        yarp::dev::IControlMode2     *modeArm;
         yarp::dev::IPositionControl *posArm;
-        //ICartesianControl *cartArm;
+        int armAxes;
 
         yarp::sig::Vector armHomePoss, armHomeVels, armLowPoss, armLowVels, armFrontPoss, armFrontVels;
         yarp::sig::Vector handOpenPoss, handPunchPoss, handVels;

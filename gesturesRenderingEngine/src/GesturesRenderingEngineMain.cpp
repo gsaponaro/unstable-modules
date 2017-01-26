@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
         yInfo("Options:");
         yInfo("--name <port prefix> (default %s)", DefModuleName.c_str());
         yInfo("--robot <robot name> (icub or icubSim, default %s)", DefRobot.c_str());
+        yInfo("--repetitions <int> (default %d)", DefRepetitions);
         return 0; // EXIT_SUCCESS
     }
 
