@@ -87,7 +87,7 @@ void GesturesRenderingEngineThread::steerHeadToHome()
     //    modeHead->setControlMode(i,VOCAB_CM_VELOCITY);
 
     gazeCtrl->lookAtFixationPoint(homeHead);
-    gazeCtrl->waitMotionDone();
+    //gazeCtrl->waitMotionDone();
 
     //for(int i=0; i<headAxes; i++)
     //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
@@ -154,7 +154,7 @@ GesturesRenderingEngineThread::GesturesRenderingEngineThread(
     drvHead = NULL;
     drvGazeCtrl = NULL;
     headPosCtrl = NULL;
-    //modeHead = NULL;
+    modeHead = NULL;
     drvLeftArm = NULL;
 }
 
@@ -226,6 +226,7 @@ bool GesturesRenderingEngineThread::threadInit()
     bool ok = true;
     ok = ok && drvHead->view(encHead);
     ok = ok && drvHead->view(headPosCtrl);
+    ok = ok && drvHead->view(modeHead);
     if (!ok)
     {
         yError("problem acquiring head interfaces");
@@ -246,16 +247,15 @@ bool GesturesRenderingEngineThread::threadInit()
 
     // open gaze device views
     ok = ok && drvGazeCtrl->view(gazeCtrl);
-    //ok = ok && drvGazeCtrl->view(modeHead);
-    if (gazeCtrl == NULL)
-    {
-        yError("problem with gaze interface when initializing IGazeControl");
-        close();
-        return false;
-    }
     if (!ok)
     {
         yError("problem acquiring gaze interfaces");
+        close();
+        return false;
+    }
+    if (gazeCtrl == NULL)
+    {
+        yError("problem with gaze interface when initializing IGazeControl");
         close();
         return false;
     }
@@ -352,11 +352,21 @@ bool GesturesRenderingEngineThread::do_nod()
 
     steerHeadToHome();
 
-    //for(int i=0; i<headAxes; i++)
-    //    modeHead->setControlMode(i,VOCAB_CM_POSITION);
+    if (robotName == "icub")
+    {
+        yDebug() << __func__ << "setting position control mode";
+        for(int i=0; i<headAxes; i++)
+            modeHead->setControlMode(i,VOCAB_CM_POSITION);
+
+        yDebug() << __func__ << "setting velocities";
+        Vector velHead(headAxes);
+        velHead = 10.0;
+        headPosCtrl->setRefSpeeds(velHead.data());
+    }
 
     // read current joint values and save them in head variable
     encHead->getEncoders(head.data());
+    yDebug() << __func__ << "initially head =" << head.toString();
 
     double init_j0 = head[0];
 
@@ -373,6 +383,7 @@ bool GesturesRenderingEngineThread::do_nod()
         Time::delay(t_j0);
 
         head[0] = final_j0;
+        yDebug() << __func__ << "moving j0 to" << head[0];
         headPosCtrl->positionMove(head.data());
 
         Time::delay(t_j0);
@@ -388,6 +399,13 @@ bool GesturesRenderingEngineThread::do_nod()
     {
         headPosCtrl->checkMotionDone(&done);
         Time::delay(0.1);
+    }
+
+    if (robotName == "icub")
+    {
+        yDebug() << __func__ << "setting position-direct control mode";
+        for(int i=0; i<headAxes; i++)
+            modeHead->setControlMode(i,VOCAB_CM_POSITION_DIRECT);
     }
 
     yInfo("...done");
@@ -434,6 +452,7 @@ bool GesturesRenderingEngineThread::do_lookout()
     steerHeadToHome();
 
     double timing = 3.0;
+    //double timing = 2.0; // decreased in 2017
 
     // parameter
     double y_far = -0.60;
@@ -450,13 +469,13 @@ bool GesturesRenderingEngineThread::do_lookout()
     for (int times=0; times<repetitions; times++)
     {
         gazeCtrl->lookAtFixationPoint(fp); // move the gaze to the desired fixation point
-        gazeCtrl->waitMotionDone();        // wait until the operation is done
+        //gazeCtrl->waitMotionDone();        // wait until the operation is done
 
         fp[1] = y_far;
         fp[2] = +0.60;
         Time::delay(timing);
         gazeCtrl->lookAtFixationPoint(fp);
-        gazeCtrl->waitMotionDone();
+        //gazeCtrl->waitMotionDone();
 
         Time::delay(timing);
         fp[1] = +0.00;
