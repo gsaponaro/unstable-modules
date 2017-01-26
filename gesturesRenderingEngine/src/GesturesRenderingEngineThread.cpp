@@ -154,7 +154,7 @@ GesturesRenderingEngineThread::GesturesRenderingEngineThread(
     drvHead = NULL;
     drvGazeCtrl = NULL;
     headPosCtrl = NULL;
-    modeHead = NULL;
+    //modeHead = NULL;
     drvLeftArm = NULL;
 }
 
@@ -226,7 +226,7 @@ bool GesturesRenderingEngineThread::threadInit()
     bool ok = true;
     ok = ok && drvHead->view(encHead);
     ok = ok && drvHead->view(headPosCtrl);
-    ok = ok && drvHead->view(modeHead);
+    //ok = ok && drvHead->view(modeHead);
     if (!ok)
     {
         yError("problem acquiring head interfaces");
@@ -352,6 +352,7 @@ bool GesturesRenderingEngineThread::do_nod()
 
     steerHeadToHome();
 
+    /*
     if (robotName == "icub")
     {
         yDebug() << __func__ << "setting position control mode";
@@ -363,6 +364,7 @@ bool GesturesRenderingEngineThread::do_nod()
         velHead = 10.0;
         headPosCtrl->setRefSpeeds(velHead.data());
     }
+    */
 
     // read current joint values and save them in head variable
     encHead->getEncoders(head.data());
@@ -401,12 +403,14 @@ bool GesturesRenderingEngineThread::do_nod()
         Time::delay(0.1);
     }
 
+    /*
     if (robotName == "icub")
     {
         yDebug() << __func__ << "setting position-direct control mode";
         for(int i=0; i<headAxes; i++)
             modeHead->setControlMode(i,VOCAB_CM_POSITION_DIRECT);
     }
+    */
 
     yInfo("...done");
 

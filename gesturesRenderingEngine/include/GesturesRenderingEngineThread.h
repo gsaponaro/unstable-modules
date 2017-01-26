@@ -61,7 +61,7 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         yarp::dev::IEncoders *encHead;
         yarp::dev::IPositionControl *headPosCtrl;
         yarp::dev::IGazeControl *gazeCtrl;
-        yarp::dev::IControlMode2 *modeHead;
+        //yarp::dev::IControlMode2 *modeHead;
         yarp::sig::Vector head;
         int headAxes;
 
