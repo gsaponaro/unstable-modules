@@ -43,6 +43,9 @@
 # endif
 #endif
 
+#define HAND_OPEN  0
+#define HAND_PUNCH 1
+
 class GesturesRenderingEngineThread : public yarp::os::RateThread
 {
     private:
@@ -71,13 +74,19 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
         yarp::dev::IPositionControl *posArm;
         //ICartesianControl *cartArm;
         yarp::sig::Vector arm; // obsolete?
+
+        yarp::sig::Vector armHomePoss, armHomeVels, armLowPoss, armLowVels, armFrontPoss, armFrontVels;
+        yarp::sig::Vector handOpenPoss, handPunchPoss, handVels;
+
         void moveArm(const int action);
 
+        void steerArmToHome();
+        void steerArmToLow();
+        void steerArmToFront();
+        void steerHeadToHome();
         void openHand();
         void closeHand();
         void moveHand(const int action);
-
-        void steerHeadToHome();
 
     public:
         GesturesRenderingEngineThread(const std::string &_moduleName,

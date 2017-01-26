@@ -19,6 +19,49 @@ using namespace yarp::os;
 using namespace yarp::sig;
 
 /**********************************************************/
+void GesturesRenderingEngineThread::steerArmToHome()
+{
+    IPositionControl *armPosCtrl;
+
+    drvLeftArm->view(armPosCtrl);
+
+    for (int j=0; j<armHomeVels.length(); j++)
+    {
+        armPosCtrl->setRefSpeed(j, armHomeVels[j]);
+        armPosCtrl->positionMove(j, armHomePoss[j]);
+    }
+
+    openHand();
+}
+/**********************************************************/
+void GesturesRenderingEngineThread::steerArmToLow()
+{
+    IPositionControl *armPosCtrl;
+
+    drvLeftArm->view(armPosCtrl);
+
+    for (int j=0; j<armLowVels.length(); j++)
+    {
+        armPosCtrl->setRefSpeed(j, armLowVels[j]);
+        armPosCtrl->positionMove(j, armLowPoss[j]);
+    }
+}
+
+/**********************************************************/
+void GesturesRenderingEngineThread::steerArmToFront()
+{
+    IPositionControl *armPosCtrl;
+
+    drvLeftArm->view(armPosCtrl);
+
+    for (int j=0; j<armFrontVels.length(); j++)
+    {
+        armPosCtrl->setRefSpeed(j, armFrontVels[j]);
+        armPosCtrl->positionMove(j, armFrontPoss[j]);
+    }
+}
+
+/**********************************************************/
 void GesturesRenderingEngineThread::steerHeadToHome()
 {
     Vector homeHead(3);
@@ -30,6 +73,51 @@ void GesturesRenderingEngineThread::steerHeadToHome()
     //yInfo("*** Homing head");
 
     gazeCtrl->lookAtFixationPoint(homeHead);
+}
+
+/**********************************************************/
+void GesturesRenderingEngineThread::openHand()
+{
+    moveHand(HAND_OPEN);
+}
+
+/**********************************************************/
+void GesturesRenderingEngineThread::closeHand()
+{
+    moveHand(HAND_PUNCH);
+}
+
+/**********************************************************/
+void GesturesRenderingEngineThread::moveHand(const int action)
+{
+    IPositionControl *armPosCtrl;
+    Vector *poss = NULL;
+
+    switch(action)
+    {
+        case HAND_OPEN:
+        {
+            poss = &handOpenPoss;
+            break;
+        }
+        case HAND_PUNCH:
+        {
+            poss = &handPunchPoss;
+            break;
+        }
+        default:
+            return;
+    }
+
+    drvLeftArm->view(armPosCtrl);
+
+    for (int j=0; j<handVels.length(); j++)
+    {
+        int k = armHomeVels.length() + j;
+
+        armPosCtrl->setRefSpeed(k, handVels[j]);
+        armPosCtrl->positionMove(k, (*poss)[j]);
+    }
 }
 
 /**********************************************************/
@@ -74,7 +162,6 @@ bool GesturesRenderingEngineThread::threadInit()
     Property optHead("(device remote_controlboard)");
     optHead.put("remote",("/"+robotName+"/head").c_str());
     optHead.put("local",("/"+moduleName+"/head").c_str());
-
     drvHead = new PolyDriver;
     if (!drvHead->open(optHead))
     {
@@ -82,11 +169,20 @@ bool GesturesRenderingEngineThread::threadInit()
         return false;
     }
 
-    // open gazecontrollerclient and cartesiancontrollerclient drivers
+    Property optLeftArm("(device remote_controlboard)");
+    optLeftArm.put("remote",("/"+robotName+"/left_arm").c_str());
+    optLeftArm.put("local",("/"+moduleName+"/left_arm").c_str());
+    drvLeftArm = new PolyDriver;
+    if (!drvLeftArm->open(optLeftArm))
+    {
+        close();
+        return false;
+    }
+
+    // open gazecontrollerclient driver
     Property optGazeCtrl("(device gazecontrollerclient)");
     optGazeCtrl.put("remote","/iKinGazeCtrl");
     optGazeCtrl.put("local",("/"+moduleName+"/gaze").c_str());
-
     drvGazeCtrl = new PolyDriver;
     if (!drvGazeCtrl->open(optGazeCtrl))
     {
@@ -109,6 +205,9 @@ bool GesturesRenderingEngineThread::threadInit()
     ok = ok && drvHead->view(encHead);
     ok = ok && drvHead->view(headPosCtrl);
     //ok = ok && drvHead->view(modeHead);
+
+    ok = ok && drvLeftArm->view(encArm);
+    ok = ok && drvLeftArm->view(posArm);
 
     ok = ok && drvGazeCtrl->view(gazeCtrl);
 
@@ -137,16 +236,29 @@ bool GesturesRenderingEngineThread::threadInit()
     }
 
     // init
-    int headJoints;
-    encHead->getAxes(&headJoints);
-    head.resize(headJoints, 0.0);
+    int headAxes;
+    encHead->getAxes(&headAxes);
+    const int expectedHeadAxes = 6;
+    if (headAxes != expectedHeadAxes)
+        yWarning("got %d head axes, was expecting %d", headAxes, expectedHeadAxes);
 
-    //for(int i=0; i<headJoints; i++)
+    head.resize(headAxes, 0.0);
+
+    //for(int i=0; i<headAxes; i++)
     //    modeHead->setControlMode(i,VOCAB_CM_MIXED);
 
-    Vector velHead(headJoints);
+    Vector velHead(headAxes);
     velHead = 10.0;
     headPosCtrl->setRefSpeeds(velHead.data());
+
+    int armAxes;
+    encArm->getAxes(&armAxes);
+    const int expectedArmAxes = 16;
+    if (armAxes != expectedArmAxes)
+        yWarning("got %d arm axes, was expecting %d", armAxes, expectedArmAxes);
+
+    arm.resize(armAxes, 0.0);
+    posArm->getAxes(&armAxes);
 
     //gazeCtrl->storeContext(&startup_context_id_gaze);
     //gazeCtrl->restoreContext(0);
@@ -159,7 +271,39 @@ bool GesturesRenderingEngineThread::threadInit()
     //gazeCtrl->getInfo(info);
     //fprintf(stdout,"gaze info = %s\n",info.toString().c_str());
 
+    armHomePoss.resize(7, 0.0);
+    armHomePoss[0]=-30.0; armHomePoss[1]=30.0; armHomePoss[2]=45.0;
+
+    armHomeVels.resize(7, 0.0);
+    armHomeVels = 10.0;
+
+    armLowPoss.resize(7, 0.0);
+    armLowPoss[0]=-10.0; armLowPoss[1]=30.0; armLowPoss[2]=100.0;
+
+    armLowVels.resize(7, 0.0);
+    armLowVels[0]=armLowVels[3]=20.0;
+    armLowVels[1]=armLowVels[2]=armLowVels[4]=armLowVels[5]=armLowVels[6]=10.0;
+
+    armFrontPoss.resize(7, 0.0);
+    armFrontPoss[0]=-70.0; armFrontPoss[1]=20.0; armFrontPoss[3]=30.0;
+
+    armFrontVels.resize(7, 0.0);
+    armFrontVels = 10.0;
+    armFrontVels[0]=20.0; armFrontVels[3]=30.0;
+
+    handOpenPoss.resize(9, 0.0);
+
+    handPunchPoss.resize(9, 0.0);
+    handPunchPoss[1]=20.0; handPunchPoss[2]=25.0; handPunchPoss[3]=40.0;
+    handPunchPoss[4]=50.0; handPunchPoss[5]=40.0; handPunchPoss[6]=50.0;
+    handPunchPoss[7]=50.0; handPunchPoss[8]=100.0;
+
+    handVels.resize(9, 0.0);
+    handVels = 20.0;
+    handVels[0]=10.0;
+
     steerHeadToHome();
+    steerArmToHome();
 
     closing = false;
 
@@ -234,7 +378,24 @@ bool GesturesRenderingEngineThread::do_punch()
     LockGuard lg(mutex);
     yInfo("doing punch action...");
 
+    double timing = 3.0;
 
+    for (int times=0; times<repetitions; times++)
+    {
+        closeHand();
+        Time::delay(timing);
+        steerArmToLow();
+        Time::delay(timing);
+        steerArmToFront();
+        Time::delay(timing);
+        steerArmToLow();
+        Time::delay(timing);
+        steerArmToFront();
+        Time::delay(timing);
+        steerArmToLow();
+    }
+
+    steerArmToHome();
 
     yInfo("...done");
 
@@ -275,19 +436,7 @@ bool GesturesRenderingEngineThread::do_lookout()
         fp[2] = +0.35;
     }
 
-
     steerHeadToHome();
-
-    /*
-    bool done = false;
-    double t0 = Time::now();
-    const double timeout = 5.0;
-    while (!done && (Time::now()-t0<timeout))
-    {
-        headPosCtrl->checkMotionDone(&done);
-        Time::delay(0.1);
-    }
-    */
 
     yInfo("...done");
 
@@ -300,6 +449,75 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     LockGuard lg(mutex);
     yInfo("doing thumbs up action...");
 
+    steerArmToHome();
+    closeHand();
+
+    // parameter
+    double vel8fin = 30.0;
+
+    Vector posArmInit(16); // should not be hardcoded
+    posArmInit     =   0.0;
+    posArmInit[0]  = -10.0;
+    posArmInit[1]  =  30.0;
+    posArmInit[3]  =  60.0; // different from punch
+    posArmInit[8]  =  20.0;
+    posArmInit[9]  =  25.0;
+    posArmInit[10] =  40.0;
+    posArmInit[11] =  50.0;
+    posArmInit[12] =  40.0;
+    posArmInit[13] =  50.0;
+    posArmInit[14] =  50.0;
+    posArmInit[15] = 100.0;
+    Vector velArmInit(16);
+    velArmInit    =   10.0;
+    velArmInit[0] =   20.0;
+    velArmInit[4] =   20.0;
+    velArmInit[8] =   30.0;
+    velArmInit[15] =  40.0; // new
+
+    Vector posArmFin(16);
+    posArmFin      =    0.0;
+    posArmFin[0]   =  -30.0;
+    posArmFin[1]   = posArmInit[1];
+    posArmFin[2]   = posArmInit[2];
+    posArmFin[3]   = posArmInit[3];
+    posArmFin[4]   =  -50.0;
+    posArmFin[5]   = posArmInit[5];
+    posArmFin[6]   = posArmInit[6];
+    posArmFin[7]   = posArmInit[7];
+    posArmFin[8]   =  -10.0;
+    posArmFin[9]   = posArmInit[9];
+    posArmFin[10]  =    0.0;
+    posArmFin[11]  = posArmInit[11];
+    posArmFin[12]  = posArmInit[12];
+    posArmFin[13]  = posArmInit[13];
+    posArmFin[14]  = posArmInit[14];
+    posArmFin[15]  = posArmInit[15];
+    Vector velArmFin(16);
+    velArmFin     =   10.0;
+    velArmFin[0]  =   20.0;
+    velArmFin[4]  =   20.0;
+    velArmFin[8]  = vel8fin;
+    velArmFin[10] =   20.0;
+    velArmFin[15] =   40.0; // new
+
+    double timing = 3.0;
+
+    for (int times=0; times<repetitions; times++)
+    {
+        posArm->setRefSpeeds(velArmInit.data());
+        posArm->positionMove(posArmInit.data());  
+
+        Time::delay(timing);
+
+        posArm->setRefSpeeds(velArmFin.data());
+        posArm->positionMove(posArmFin.data());  
+
+        Time::delay(timing);
+    }
+
+    steerArmToHome();
+
     yInfo("...done");
 
     return true;
@@ -310,6 +528,76 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
 {
     LockGuard lg(mutex);
     yInfo("doing thumbs down action...");
+
+    steerArmToHome();
+    closeHand();
+
+    // parameter
+    double vel8fin = 30.0;
+
+    Vector posArmInit(16); // should not be hardcoded
+    posArmInit     =   0.0;
+    posArmInit[0]  = -10.0;
+    posArmInit[1]  =  30.0;
+    posArmInit[3]  =  80.0;
+    posArmInit[8]  =  20.0;
+    posArmInit[9]  =  25.0;
+    posArmInit[10] =  40.0;
+    posArmInit[11] =  50.0;
+    posArmInit[12] =  40.0;
+    posArmInit[13] =  50.0;
+    posArmInit[14] =  50.0;
+    posArmInit[15] = 100.0;
+    Vector velArmInit(16);
+    velArmInit    =   10.0;
+    velArmInit[0]  =  20.0;
+    velArmInit[4]  =  30.0;
+    velArmInit[8]  =  30.0;
+    velArmInit[10] =  20.0;
+    velArmInit[15] =  40.0; // new
+
+    Vector posArmFin(16);
+    posArmFin      =    0.0;
+    posArmFin[0]   = posArmInit[0];
+    posArmFin[1]   = posArmInit[1];
+    posArmFin[2]   = posArmInit[2];
+    posArmFin[3]   = posArmInit[3];
+    posArmFin[4]   =   90.0;
+    posArmFin[5]   = posArmInit[5];
+    posArmFin[6]   = posArmInit[6];
+    posArmFin[7]   = posArmInit[7];
+    posArmFin[8]   =   20.0;
+    posArmFin[9]   = posArmInit[9];
+    posArmFin[10]  =    0.0;
+    posArmFin[11]  = posArmInit[11];
+    posArmFin[12]  = posArmInit[12];
+    posArmFin[13]  = posArmInit[13];
+    posArmFin[14]  = posArmInit[14];
+    posArmFin[15]  = posArmInit[15];
+    Vector velArmFin(16);
+    velArmFin     =   10.0;
+    velArmFin[0]  =   20.0;
+    velArmFin[4]  =   30.0;
+    velArmFin[8]  = vel8fin;
+    velArmFin[10] =   20.0;
+    velArmFin[15] =   40.0; // new
+
+    double timing = 3.0;
+
+    for (int times=0; times<repetitions; times++)
+    {
+        posArm->setRefSpeeds(velArmInit.data());
+        posArm->positionMove(posArmInit.data());  
+
+        Time::delay(timing);
+
+        posArm->setRefSpeeds(velArmFin.data());
+        posArm->positionMove(posArmFin.data());  
+
+        Time::delay(timing);
+    }
+
+    steerArmToHome();
 
     yInfo("...done");
 
