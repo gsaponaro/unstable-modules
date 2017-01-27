@@ -17,17 +17,12 @@ using namespace yarp::sig;
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToHome()
 {
-     // TODO: use posArm instead
-    IPositionControl *armPosCtrl;
-
-    drvLeftArm->view(armPosCtrl);
-
     yInfo("homing arm...");
 
     for (int j=0; j<armHomeVels.length(); j++)
     {
-        armPosCtrl->setRefSpeed(j, armHomeVels[j]);
-        armPosCtrl->positionMove(j, armHomePoss[j]);
+        posArm->setRefSpeed(j, armHomeVels[j]);
+        posArm->positionMove(j, armHomePoss[j]);
     }
 
     openHand();
@@ -37,29 +32,20 @@ void GesturesRenderingEngineThread::steerArmToHome()
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToLow()
 {
-    // TODO: use posArm instead
-    IPositionControl *armPosCtrl;
-
-    drvLeftArm->view(armPosCtrl);
-
     for (int j=0; j<armLowVels.length(); j++)
     {
-        armPosCtrl->setRefSpeed(j, armLowVels[j]);
-        armPosCtrl->positionMove(j, armLowPoss[j]);
+        posArm->setRefSpeed(j, armLowVels[j]);
+        posArm->positionMove(j, armLowPoss[j]);
     }
 }
 
 /**********************************************************/
 void GesturesRenderingEngineThread::steerArmToFront()
 {
-    IPositionControl *armPosCtrl;
-
-    drvLeftArm->view(armPosCtrl);
-
     for (int j=0; j<armFrontVels.length(); j++)
     {
-        armPosCtrl->setRefSpeed(j, armFrontVels[j]);
-        armPosCtrl->positionMove(j, armFrontPoss[j]);
+        posArm->setRefSpeed(j, armFrontVels[j]);
+        posArm->positionMove(j, armFrontPoss[j]);
     }
 }
 
@@ -95,8 +81,6 @@ void GesturesRenderingEngineThread::closeHand()
 /**********************************************************/
 void GesturesRenderingEngineThread::moveHand(const int action)
 {
-    // TODO: use posArm instead
-    IPositionControl *armPosCtrl;
     Vector *poss = NULL;
 
     switch(action)
@@ -115,14 +99,12 @@ void GesturesRenderingEngineThread::moveHand(const int action)
             return;
     }
 
-    drvLeftArm->view(armPosCtrl);
-
     for (int j=0; j<handVels.length(); j++)
     {
         int k = armHomeVels.length() + j;
 
-        armPosCtrl->setRefSpeed(k, handVels[j]);
-        armPosCtrl->positionMove(k, (*poss)[j]);
+        posArm->setRefSpeed(k, handVels[j]);
+        posArm->positionMove(k, (*poss)[j]);
     }
 }
 
