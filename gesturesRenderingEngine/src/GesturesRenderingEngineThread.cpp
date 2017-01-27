@@ -313,7 +313,7 @@ bool GesturesRenderingEngineThread::threadInit()
     //handPunchPoss[7]=50.0;
     handPunchPoss[7]=70.0; // increased in 2017
     //handPunchPoss[8]=100.0;
-    handPunchPoss[8]=110.0; // increased in 2017
+    handPunchPoss[8]=130.0; // increased in 2017
 
     handVels.resize(9, 0.0);
     handVels = 20.0;
@@ -516,7 +516,8 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     posArmInit[12] =  40.0;
     posArmInit[13] =  50.0;
     posArmInit[14] =  50.0;
-    posArmInit[15] = 100.0;
+    //posArmInit[15] = 100.0;
+    posArmInit[15] = 130.0;
     Vector velArmInit(armAxes);
     velArmInit    =   10.0;
     velArmInit[0] =   20.0;
@@ -601,7 +602,8 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     posArmInit[13] =  50.0;
     //posArmInit[14] =  50.0;
     posArmInit[14] =  80.0; // 2017
-    posArmInit[15] = 100.0;
+    //posArmInit[15] = 100.0;
+    posArmInit[15] = 130.0; // 2017
     Vector velArmInit(armAxes);
     velArmInit    =   10.0;
     velArmInit[0]  =  20.0;
