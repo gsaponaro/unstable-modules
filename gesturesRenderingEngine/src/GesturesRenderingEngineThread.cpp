@@ -595,9 +595,11 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     posArmInit[9]  =  25.0;
     posArmInit[10] =  40.0;
     posArmInit[11] =  50.0;
-    posArmInit[12] =  40.0;
+    //posArmInit[12] =  40.0;
+    posArmInit[12] =  90.0; // 2017
     posArmInit[13] =  50.0;
-    posArmInit[14] =  50.0;
+    //posArmInit[14] =  50.0;
+    posArmInit[14] =  80.0; // 2017
     posArmInit[15] = 100.0;
     Vector velArmInit(armAxes);
     velArmInit    =   10.0;
@@ -620,7 +622,8 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     posArmFin[6]   = posArmInit[6];
     posArmFin[7]   = posArmInit[7];
     posArmFin[8]   =   20.0;
-    posArmFin[9]   = posArmInit[9];
+    //posArmFin[9]   = posArmInit[9];
+    posArmFin[9]   =   20.0; // 2017
     posArmFin[10]  =    0.0;
     posArmFin[11]  = posArmInit[11];
     posArmFin[12]  = posArmInit[12];
@@ -633,6 +636,10 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     velArmFin[4]  =   30.0;
     velArmFin[8]  = vel8fin;
     velArmFin[10] =   20.0;
+    velArmFin[11] =   40.0; // 2017
+    velArmFin[12] =   40.0; // 2017
+    velArmFin[13] =   40.0; // 2017
+    velArmFin[14] =   40.0; // 2017
     velArmFin[15] =   40.0; // new
 
     double timing = 3.0;
