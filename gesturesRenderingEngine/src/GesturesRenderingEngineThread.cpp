@@ -295,7 +295,10 @@ bool GesturesRenderingEngineThread::threadInit()
 
     armFrontVels.resize(7, 0.0);
     armFrontVels = 10.0;
-    armFrontVels[0]=20.0; armFrontVels[3]=30.0;
+    //armFrontVels[0]=20.0;
+    armFrontVels[0]=30.0; // increased in 2017
+    //armFrontVels[3]=30.0;
+    armFrontVels[3]=40.0; // increased in 2017
 
     handOpenPoss.resize(9, 0.0);
 
