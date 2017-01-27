@@ -4,8 +4,6 @@
  * Author: Giovanni Saponaro <gsaponaro@isr.tecnico.ulisboa.pt>
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
  *
- * Based on actionsRenderingEngine by Carlo Ciliberto, Vadim Tikhanoff
- *
  */
 
 #include <yarp/os/Log.h>

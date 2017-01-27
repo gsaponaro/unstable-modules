@@ -4,7 +4,14 @@
  * Author: Giovanni Saponaro <gsaponaro@isr.tecnico.ulisboa.pt>
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
  *
- * Based on actionsRenderingEngine by Carlo Ciliberto, Vadim Tikhanoff
+ * If you use this work, please cite the following publication:
+ *
+ * Giovanni Saponaro, Alexandre Bernardino. Generation of Meaningful Robot
+ * Expressions with Active Learning. 6th ACM/IEEE International Conference on
+ * Human-Robot Interaction (HRI 2011).
+ *
+ * The code is based on iCub control examples by Ugo Pattacini, as well as
+ * actionsRenderingEngine by Carlo Ciliberto and Vadim Tikhanoff.
  *
  */
 

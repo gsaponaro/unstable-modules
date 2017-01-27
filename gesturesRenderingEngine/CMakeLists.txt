@@ -2,8 +2,6 @@
 #                Instituto Superior Técnico, Universidade de Lisboa, Lisbon, Portugal
 # Authors: Giovanni Saponaro <gsaponaro@isr.tecnico.ulisboa.pt>
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
-# Based on actionsRenderingEngine by Carlo Ciliberto, Vadim Tikhanoff
 
 cmake_minimum_required(VERSION 2.8.9)
 
