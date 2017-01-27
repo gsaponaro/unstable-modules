@@ -311,9 +311,17 @@ bool GesturesRenderingEngineThread::threadInit()
     handOpenPoss.resize(9, 0.0);
 
     handPunchPoss.resize(9, 0.0);
-    handPunchPoss[1]=20.0; handPunchPoss[2]=25.0; handPunchPoss[3]=40.0;
-    handPunchPoss[4]=50.0; handPunchPoss[5]=40.0; handPunchPoss[6]=50.0;
-    handPunchPoss[7]=50.0; handPunchPoss[8]=100.0;
+    handPunchPoss[1]=20.0; handPunchPoss[2]=25.0;
+    //handPunchPoss[3]=40.0;
+    handPunchPoss[3]=85.0; // increased in 2017
+    handPunchPoss[4]=50.0;
+    //handPunchPoss[5]=40.0;
+    handPunchPoss[5]=85.0; // increased in 2017
+    handPunchPoss[6]=50.0;
+    //handPunchPoss[7]=50.0;
+    handPunchPoss[7]=70.0; // increased in 2017
+    //handPunchPoss[8]=100.0;
+    handPunchPoss[8]=110.0; // increased in 2017
 
     handVels.resize(9, 0.0);
     handVels = 20.0;
