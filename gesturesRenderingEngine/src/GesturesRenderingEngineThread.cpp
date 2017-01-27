@@ -387,13 +387,13 @@ bool GesturesRenderingEngineThread::do_nod()
     headPosCtrl->setRefAccelerations(accHead.data());
 
     //was: double init_j0 = head[0];
-    double init_j0 = 0.0; // more robust, changed in 2017
+    const double init_j0 = 0.0; // more robust, changed in 2017
 
     // parameter
-    double final_j0 = -35.0;
+    const double final_j0 = -35.0;
 
     //double t_j0 = 2.0;
-    double t_j0 = 5.0; // temporarily increased in 2017 for safety
+    const double t_j0 = 5.0; // temporarily increased in 2017 for safety
 
     for (int times=0; times<repetitions; times++)
     {
@@ -431,7 +431,7 @@ bool GesturesRenderingEngineThread::do_punch()
     LockGuard lg(mutex);
     yInfo("doing punch action...");
 
-    double timing = 3.0;
+    const double timing = 3.0;
 
     for (int times=0; times<repetitions; times++)
     {
@@ -458,10 +458,10 @@ bool GesturesRenderingEngineThread::do_lookout()
 
     steerHeadToHome();
 
-    double timing = 3.0;
+    const double timing = 3.0;
 
     // parameter
-    double y_far = -0.60;
+    const double y_far = -0.60;
 
     Vector fp(3);
     fp[0] = -0.50;    // x-component [m]
@@ -501,7 +501,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     closeHand();
 
     // parameter
-    double vel8fin = 30.0;
+    const double vel8fin = 30.0;
 
     Vector posArmInit(armAxes);
     posArmInit     =   0.0;
@@ -552,7 +552,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     velArmFin[10] =   20.0;
     velArmFin[15] =   40.0; // new
 
-    double timing = 3.0;
+    const double timing = 3.0;
 
     for (int times=0; times<repetitions; times++)
     {
@@ -584,7 +584,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     closeHand();
 
     // parameter
-    double vel8fin = 30.0;
+    const double vel8fin = 30.0;
 
     Vector posArmInit(armAxes);
     posArmInit     =   0.0;
@@ -643,7 +643,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     velArmFin[14] =   40.0; // 2017
     velArmFin[15] =   40.0; // new
 
-    double timing = 3.0;
+    const double timing = 3.0;
 
     for (int times=0; times<repetitions; times++)
     {
