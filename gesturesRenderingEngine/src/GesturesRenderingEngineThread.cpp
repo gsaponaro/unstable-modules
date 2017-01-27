@@ -433,8 +433,6 @@ bool GesturesRenderingEngineThread::do_punch()
 
     double timing = 3.0;
 
-    // TODO: increase velocity
-
     for (int times=0; times<repetitions; times++)
     {
         closeHand();
