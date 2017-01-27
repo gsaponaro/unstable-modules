@@ -6,8 +6,6 @@
  *
  */
 
-#include <yarp/sig/Vector.h>
-
 #include "GesturesRenderingEngineDefaults.h"
 #include "GesturesRenderingEngineThread.h"
 
@@ -171,6 +169,7 @@ void GesturesRenderingEngineThread::interrupt()
 /**********************************************************/
 bool GesturesRenderingEngineThread::threadInit()
 {
+    // parse options
     robotName = rf.check("robot",Value(DefRobot.c_str())).asString().c_str();
     repetitions = rf.check("repetitions",Value(DefRepetitions)).asInt();
 
@@ -210,6 +209,7 @@ bool GesturesRenderingEngineThread::threadInit()
         return false;
     }
 
+    // check if drivers have been configured correctly
     if (!drvHead->isValid() || !drvLeftArm->isValid() || !drvGazeCtrl->isValid())
     {
         yError("Problem configuring drivers");
@@ -232,7 +232,6 @@ bool GesturesRenderingEngineThread::threadInit()
     // open left_arm device views
     ok = ok && drvLeftArm->view(encArm);
     ok = ok && drvLeftArm->view(posArm);
-    //ok = ok && drvLeftArm->view(modeArm);
     if (!ok)
     {
         yError("problem acquiring left_arm interfaces");
@@ -255,12 +254,16 @@ bool GesturesRenderingEngineThread::threadInit()
         return false;
     }
 
-    // initialize control variables
+    // initialize variables for control
     headAxes = 0;
     encHead->getAxes(&headAxes);
     const int expectedHeadAxes = 6;
     if (headAxes != expectedHeadAxes)
-        yWarning("got %d head axes, was expecting %d", headAxes, expectedHeadAxes);
+    {
+        yError("got %d head axes, was expecting %d", headAxes, expectedHeadAxes);
+        close();
+        return false;
+    }
 
     head.resize(headAxes, 0.0);
 
@@ -274,13 +277,19 @@ bool GesturesRenderingEngineThread::threadInit()
     encArm->getAxes(&armAxes);
     const int expectedArmAxes = 16;
     if (armAxes != expectedArmAxes)
-        yWarning("got %d arm axes, was expecting %d", armAxes, expectedArmAxes);
+    {
+        yError("got %d arm axes, was expecting %d", armAxes, expectedArmAxes);
+        close();
+        return false;
+    }
 
+    // configure gaze controller as in the HRI 2011 paper
     gazeCtrl->setNeckTrajTime(2.0);
     gazeCtrl->setEyesTrajTime(1.0);
-    gazeCtrl->setTrackingMode(false); // tracking mode: torso moves => gaze compensates
+    gazeCtrl->setTrackingMode(false); // tracking mode means that if torso moves => gaze compensates
     gazeCtrl->setSaccadesMode(false);
 
+    // configure arm positions (almost) as in the HRI 2011 paper
     armHomePoss.resize(7, 0.0);
     armHomePoss[0]=-30.0; armHomePoss[1]=30.0; armHomePoss[2]=45.0;
 
@@ -325,7 +334,7 @@ bool GesturesRenderingEngineThread::threadInit()
     handVels = 20.0;
     handVels[0]=10.0;
 
-    // start control
+    // start control by moving robot to initial position
     steerHeadToHome();
     steerArmToHome();
 
@@ -393,7 +402,7 @@ bool GesturesRenderingEngineThread::do_nod()
     headPosCtrl->setRefAccelerations(accHead.data());
 
     //was: double init_j0 = head[0];
-    double init_j0 = 0.0;
+    double init_j0 = 0.0; // more robust, changed in 2017
 
     // parameter
     double final_j0 = -35.0;

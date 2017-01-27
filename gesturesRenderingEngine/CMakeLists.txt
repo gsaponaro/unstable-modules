@@ -10,14 +10,17 @@ project(gesturesRenderingEngine)
 find_package(YARP REQUIRED)
 find_package(ICUBcontrib REQUIRED)
 
+# extend the current search path used by CMake to load helpers
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
 
+# helpers defining certain macros (e.g. "yarp_install")
 include(YarpIDL)
 include(YarpInstallationHelpers)
 include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
 
+# specify to install in $ICUBcontrib_DIR/bin
 icubcontrib_set_default_prefix()
 
 yarp_add_idl(IDL_GEN_FILES ${PROJECT_NAME}.thrift)
@@ -36,4 +39,5 @@ target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
 yarp_install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
+# generate ad-hoc project to perform "make uninstall"
 icubcontrib_add_uninstall_target()

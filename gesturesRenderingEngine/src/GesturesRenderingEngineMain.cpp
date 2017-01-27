@@ -15,9 +15,6 @@
  *
  */
 
-#include <yarp/os/Log.h>
-#include <yarp/os/Network.h>
-
 #include "GesturesRenderingEngineDefaults.h"
 #include "GesturesRenderingEngineModule.h"
 

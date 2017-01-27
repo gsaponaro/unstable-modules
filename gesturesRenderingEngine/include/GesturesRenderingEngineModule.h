@@ -11,7 +11,6 @@
 
 #include <string>
 
-#include <yarp/os/Bottle.h>
 #include <yarp/os/RFModule.h>
 
 #include "GesturesRenderingEngine_IDL.h"

@@ -12,8 +12,8 @@
 #include <iostream> // __func__
 #include <string>
 
-//#include <yarp/dev/CartesianControl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/IControlMode2.h>
 #include <yarp/dev/GazeControl.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IPositionControl.h>
@@ -24,12 +24,9 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Mutex.h>
-//#include <yarp/os/Port.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/ResourceFinder.h>
-//#include <yarp/os/RpcClient.h>
 #include <yarp/os/Time.h>
-//#include <yarp/os/Vocab.h>
 #include <yarp/sig/Vector.h>
 
 // make sure __func__ is set correctly, http://stackoverflow.com/a/17528983
@@ -67,7 +64,6 @@ class GesturesRenderingEngineThread : public yarp::os::RateThread
 
         yarp::dev::PolyDriver *drvLeftArm;
         yarp::dev::IEncoders *encArm;
-        //yarp::dev::IControlMode2 *modeArm;
         yarp::dev::IPositionControl *posArm;
         int armAxes;
 

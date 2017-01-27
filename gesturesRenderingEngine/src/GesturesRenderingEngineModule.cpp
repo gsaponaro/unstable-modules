@@ -6,18 +6,17 @@
  *
  */
 
-#include <yarp/os/Log.h>
-
 #include "GesturesRenderingEngineDefaults.h"
 #include "GesturesRenderingEngineModule.h"
 
 using namespace std;
 using namespace yarp::os;
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::configure(ResourceFinder &rf)
 {
     // module parameters
-    moduleName = rf.check("name", Value("gesturesRenderingEngine")).asString();
+    moduleName = rf.check("name", Value(DefModuleName.c_str())).asString();
     setName(moduleName.c_str());
 
     handlerPortName = "/" + moduleName + "/rpc:i";
@@ -40,6 +39,7 @@ bool GesturesRenderingEngineModule::configure(ResourceFinder &rf)
     return true;
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::interruptModule()
 {
     handlerPort.interrupt();
@@ -47,6 +47,7 @@ bool GesturesRenderingEngineModule::interruptModule()
     return true;
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::close()
 {
     yInfo("closing RPC port");
@@ -63,47 +64,57 @@ bool GesturesRenderingEngineModule::close()
     return true;
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::updateModule()
 {
     return !closing;
 }
 
+/**********************************************************/
 double GesturesRenderingEngineModule::getPeriod()
 {
     return 0.0;
 }
 
 // IDL functions
+
+/**********************************************************/
 bool GesturesRenderingEngineModule::attach(yarp::os::RpcServer &source)
 {
     return this->yarp().attachAsServer(source);
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::do_nod()
 {
     return thread->do_nod();
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::do_punch()
 {
     return thread->do_punch();
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::do_lookout()
 {
     return thread->do_lookout();
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::do_thumbsup()
 {
     return thread->do_thumbsup();
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::do_thumbsdown()
 {
     return thread->do_thumbsdown();
 }
 
+/**********************************************************/
 bool GesturesRenderingEngineModule::quit()
 {
     yInfo("quitting");
