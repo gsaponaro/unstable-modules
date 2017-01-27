@@ -520,7 +520,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     // parameter
     double vel8fin = 30.0;
 
-    Vector posArmInit(16); // should not be hardcoded
+    Vector posArmInit(armAxes);
     posArmInit     =   0.0;
     posArmInit[0]  = -10.0;
     posArmInit[1]  =  30.0;
@@ -534,14 +534,14 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     posArmInit[13] =  50.0;
     posArmInit[14] =  50.0;
     posArmInit[15] = 100.0;
-    Vector velArmInit(16);
+    Vector velArmInit(armAxes);
     velArmInit    =   10.0;
     velArmInit[0] =   20.0;
     velArmInit[4] =   20.0;
     velArmInit[8] =   30.0;
     velArmInit[15] =  40.0; // new
 
-    Vector posArmFin(16);
+    Vector posArmFin(armAxes);
     posArmFin      =    0.0;
     posArmFin[0]   =  -30.0;
     posArmFin[1]   = posArmInit[1];
@@ -561,7 +561,7 @@ bool GesturesRenderingEngineThread::do_thumbsup()
     posArmFin[13]  = posArmInit[13];
     posArmFin[14]  = posArmInit[14];
     posArmFin[15]  = posArmInit[15];
-    Vector velArmFin(16);
+    Vector velArmFin(armAxes);
     velArmFin     =   10.0;
     velArmFin[0]  =   20.0;
     velArmFin[4]  =   20.0;
@@ -603,7 +603,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     // parameter
     double vel8fin = 30.0;
 
-    Vector posArmInit(16); // should not be hardcoded
+    Vector posArmInit(armAxes);
     posArmInit     =   0.0;
     //posArmInit[0]  = -10.0;
     posArmInit[0]  = -20.0; // safer
@@ -617,7 +617,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     posArmInit[13] =  50.0;
     posArmInit[14] =  50.0;
     posArmInit[15] = 100.0;
-    Vector velArmInit(16);
+    Vector velArmInit(armAxes);
     velArmInit    =   10.0;
     velArmInit[0]  =  20.0;
     velArmInit[4]  =  30.0;
@@ -625,7 +625,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     velArmInit[10] =  20.0;
     velArmInit[15] =  40.0; // new
 
-    Vector posArmFin(16);
+    Vector posArmFin(armAxes);
     posArmFin      =    0.0;
     posArmFin[0]   = posArmInit[0];
     //posArmFin[1]   = posArmInit[1];
@@ -645,7 +645,7 @@ bool GesturesRenderingEngineThread::do_thumbsdown()
     posArmFin[13]  = posArmInit[13];
     posArmFin[14]  = posArmInit[14];
     posArmFin[15]  = posArmInit[15];
-    Vector velArmFin(16);
+    Vector velArmFin(armAxes);
     velArmFin     =   10.0;
     velArmFin[0]  =   20.0;
     velArmFin[4]  =   30.0;
