@@ -5,14 +5,19 @@
  * CopyPolicy: Released under the terms of the GNU GPL v2.0
  */
 
+#include <yarp/os/Network.h>
+#include <yarp/os/ResourceFinder.h>
+
 #include "gesture.h"
+
+using namespace yarp::os;
 
 int main(int argc, char *argv[])
 {
     Network yarp;
 
     ResourceFinder rf;
-    rf.setVerbose(true);
+    rf.setVerbose(false);
     rf.setDefaultContext("gesture");
     rf.setDefaultConfigFile("gesture.ini");
     rf.setDefault("name", "gesture");

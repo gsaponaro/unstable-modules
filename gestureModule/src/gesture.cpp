@@ -7,6 +7,9 @@
 
 #include "gesture.h"
 
+using namespace std;
+using namespace yarp::os;
+
 /* RateThread class */
 
 GestureThread::GestureThread(unsigned int _period)
@@ -37,11 +40,12 @@ void GestureThread::threadRelease()
 
 bool GestureModule::configure(ResourceFinder &rf)
 {
+    string moduleName;
     moduleName = rf.check( "name",Value("gesture") ).asString();
     setName(moduleName.c_str());
     
     inSkelPort.open(("/"+moduleName+"/skel:i").c_str());
-    outScorePort.open(("/"+moduleName+"/score:o").c_str());
+    outHandPort.open(("/"+moduleName+"/hand:o").c_str());
     
     return true;
 }
@@ -49,6 +53,7 @@ bool GestureModule::configure(ResourceFinder &rf)
 bool GestureModule::interruptModule()
 {
     inSkelPort.interrupt();
+    outHandPort.interrupt();
     return true;
 }
 
@@ -56,6 +61,7 @@ bool GestureModule::interruptModule()
 bool GestureModule::close()
 {
     inSkelPort.close();
+    outHandPort.close();
     return true;
 }
 
@@ -71,6 +77,17 @@ bool GestureModule::updateModule()
             return true;
         }
 
+        Bottle &b = outHandPort.prepare();
+        b.clear();
+
+        const int rightHandJointIdx = 8;
+        const int jointSize = 6;
+
+        b.addDouble(skel->get(1+rightHandJointIdx*jointSize+1).asList()->get(0).asDouble());
+        b.addDouble(skel->get(1+rightHandJointIdx*jointSize+1).asList()->get(1).asDouble());
+        b.addDouble(skel->get(1+rightHandJointIdx*jointSize+1).asList()->get(2).asDouble());
+
+        outHandPort.write();
     }
 
     return true;
@@ -78,6 +95,5 @@ bool GestureModule::updateModule()
 
 double GestureModule::getPeriod()
 {
-    return 0.0;
+    return 0.0; // sync with incoming data
 }
-
