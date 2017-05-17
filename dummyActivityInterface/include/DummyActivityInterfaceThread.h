@@ -12,6 +12,7 @@
 #ifndef DUMMY_ACTIVITY_INTERFACE_THREAD_H
 #define DUMMY_ACTIVITY_INTERFACE_THREAD_H
 
+#include <cstring> // strcmp
 #include <iostream> // __func__
 #include <map>
 #include <string>

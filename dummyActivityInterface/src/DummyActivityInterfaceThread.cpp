@@ -202,7 +202,9 @@ Bottle DummyActivityInterfaceThread::getMemoryBottle()
                     cmdMemory.clear();
                     cmdMemory.addVocab(Vocab::encode("get"));
                     Bottle &content = cmdMemory.addList();
+                    //content.clear();
                     Bottle &list_bid = content.addList();
+                    //list_bid.clear();
                     list_bid.addString("id");
                     list_bid.addInt(id);
                     //yDebug() << __func__ << "sending command to OPC:" << cmdMemory.toString().c_str();
@@ -925,7 +927,7 @@ Bottle DummyActivityInterfaceThread::get2D(const string &objName)
                     if (propField->check("position_2d_left"))
                     {
                         Bottle *propFieldPos = propField->find("position_2d_left").asList();
-                        
+
                         for (int ii=0; ii< propFieldPos->size(); ++ii)
                         {
                             position2D.addDouble(propFieldPos->get(ii).asDouble());
@@ -950,19 +952,25 @@ Bottle DummyActivityInterfaceThread::get3D(const string &objName)
     }
 
     Bottle memory = getMemoryBottle();
+    //yDebug("%d entries, full memory: %s", memory.size(), memory.toString().c_str());
     Bottle position3D;
 
     for (int i=0; i<memory.size(); ++i)
     {
+        //yDebug("within get3D, i = %d", i);
         if (Bottle *propField = memory.get(i).asList())
         {
+            //yDebug("within get3D, propField = %s", propField->toString().c_str());
             if (propField->check("name"))
             {
-                if (propField->find("name").asString() == objName)
+                // robust string comparison, TODO apply it elsewhere too
+                if (strcmp(propField->find("name").asString().c_str(), objName.c_str()) == 0)
                 {
+                    //yDebug("within get3D, %s equals %s", propField->find("name").asString().c_str(), objName.c_str());
                     if (propField->check("position_3d"))
                     {
                         Bottle *propFieldPos = propField->find("position_3d").asList();
+                        //yDebug("within get3D, propFieldPos = %s", propFieldPos->toString().c_str());
 
                         for (int i2=0; i2<propFieldPos->size(); ++i2)
                         {
@@ -1427,6 +1435,7 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
     if (pos3D.get(0).asDouble() < reachable_threshold_x)
     {
         // within threshold
+        //yDebug("%s x is NOT reachable (%f < %f)", objName.c_str(), pos3D.get(0).asDouble(), reachable_threshold_x);
 
         Bottle list = pullableWith(objName);
         for (int i=0; i<list.size(); ++i)
@@ -1459,6 +1468,7 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
     else
     {
         // out of threshold
+        //yDebug("%s x is reachable (%f >= %f)", objName.c_str(), pos3D.get(0).asDouble(), reachable_threshold_x);
 
         Bottle list = getNames();
 
