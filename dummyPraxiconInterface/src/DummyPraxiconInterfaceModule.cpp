@@ -57,45 +57,12 @@ bool DummyPraxiconInterfaceModule::updateModule()
 
         // response to simple3 and complex6 scenarios:
         // ((hand grasp Ham) (Ham reach Bun-bottom) (hand put Ham) (hand grasp Bun-top) (Bun-top reach Ham) (hand put Bun-top))
-        Bottle list1;
-        list1.clear();
-        list1.addString("hand");
-        list1.addString("grasp");
-        list1.addString("Ham");
-        Bottle list2;
-        list2.clear();
-        list2.addString("Ham");
-        list2.addString("reach");
-        list2.addString("Bun-bottom");
-        Bottle list3;
-        list3.clear();
-        list3.addString("hand");
-        list3.addString("put");
-        list3.addString("Ham");
-        Bottle list4;
-        list4.clear();
-        list4.addString("hand");
-        list4.addString("grasp");
-        list4.addString("Bun-top");
-        Bottle list5;
-        list5.clear();
-        list5.addString("Bun-top");
-        list5.addString("reach");
-        list5.addString("Ham");
-        Bottle list6;
-        list6.clear();
-        list6.addString("hand");
-        list6.addString("put");
-        list6.addString("Bun-top");
-        Bottle responseContent;
-        responseContent.clear();
-        responseContent.addList() = list1;
-        responseContent.addList() = list2;
-        responseContent.addList() = list3;
-        responseContent.addList() = list4;
-        responseContent.addList() = list5;
-        responseContent.addList() = list6;
-        response.addList() = responseContent;
+        response.addString("hand grasp Ham");
+        response.addString("Ham reach Bun-bottom");
+        response.addString("hand put Ham");
+        response.addString("hand grasp Bun-top");
+        response.addString("Bun-top reach Ham");
+        response.addString("hand put Bun-top");
 
         yInfo("sending response: %s", response.toString().c_str());
         speechPort.reply(response);
