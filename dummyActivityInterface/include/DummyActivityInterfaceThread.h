@@ -79,7 +79,8 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         yarp::os::Bottle listOfGoals;
 
         std::vector<RobotAction> robotActions;
-        int robotActionsSuccessful;
+        int varGood;
+        int varSuccess;
 
     public:
         DummyActivityInterfaceThread(const std::string &_moduleName,

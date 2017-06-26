@@ -91,6 +91,7 @@ bool DummyActivityInterfaceThread::threadInit()
     elements = 0;
 
     resetActionCounters(false);
+    varSuccess = -1;
 
     return true;
 }
@@ -343,7 +344,7 @@ int DummyActivityInterfaceThread::name2id(const std::string &objName)
                  replyMemory.get(0).asVocab()==Vocab::encode("ack") &&
                  replyMemory.get(1).isList() &&
                  replyMemory.get(1).asList()->size()==2 &&
-                 replyMemory.get(1).asList()->get(0)=="id" &&
+                 replyMemory.get(1).asList()->get(0).asString()=="id" &&
                  replyMemory.get(1).asList()->get(1).isList() &&
                  replyMemory.get(1).asList()->get(1).asList()->size()>0; // the important condition
 
@@ -387,6 +388,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
             yInfo("I successfully made a %s sandwich", objectsUsed.toString().c_str());
+            varSuccess = 1;
 
             // print statistics on screen
             dump();
@@ -408,6 +410,8 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     toSay += " and ";
             }
             yDebug("%s", toSay.c_str());
+
+            varSuccess = 0;
 
             // print statistics on screen
             dump();
@@ -461,10 +465,10 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
 void DummyActivityInterfaceThread::resetActionCounters(bool verbose)
 {
     if (verbose)
-        yDebug("before reset: successful=%d attempted=%lu", robotActionsSuccessful, robotActions.size());
+        yDebug("before reset: good %d, total %lu, success %d", varGood, robotActions.size(), varSuccess);
 
     robotActions.clear();
-    robotActionsSuccessful = 0;
+    varGood = 0;
 
     yDebug("action counters reset");
 }
@@ -655,7 +659,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
         }
 
         robotActions[robotActions.size()-1].outcome = Success;
-        robotActionsSuccessful++;
+        varGood++;
         yDebug("Thank you, I successfully grasped the %s", label.c_str());
     }
     else
@@ -863,7 +867,7 @@ bool DummyActivityInterfaceThread::drop(const string &objName)
         }
 
         robotActions[robotActions.size()-1].outcome = Success;
-        robotActionsSuccessful++;
+        varGood++;
         yDebug("successfully dropped the %s", objName.c_str());
     }
     else
@@ -889,15 +893,15 @@ bool DummyActivityInterfaceThread::dump()
 
     if (robotActions.size() > 0)
     {
-        const float successRate = static_cast<float>(robotActionsSuccessful) / static_cast<float>(robotActions.size());
+        //const float fractionGood = static_cast<float>(varGood) / static_cast<float>(robotActions.size());
 
-        yDebug("list of attempted motor actions:");
+        yDebug("report on motor actions requested by planner:");
         for (int a=0; a<robotActions.size(); ++a)
             yDebug("%-26s %s", robotActions[a].action.c_str(), robotActions[a].outcome.c_str());
 
         yDebug("==================================");
-        yDebug("successful=%d attempted=%lu (success rate %.4f)",
-               robotActionsSuccessful, robotActions.size(), successRate);
+        yDebug("good %d, total %lu, success %d",
+               varGood, robotActions.size(), varSuccess);
     }
 
     return true;
@@ -1203,7 +1207,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         setObjProperty(objName, "position_3d", finPos3D);
 
         robotActions[robotActions.size()-1].outcome = Success;
-        robotActionsSuccessful++;
+        varGood++;
         yInfo("successfully pulled %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
@@ -1290,7 +1294,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         setObjProperty(objName, "position_3d", finPos3D);
 
         robotActions[robotActions.size()-1].outcome = Success;
-        robotActionsSuccessful++;
+        varGood++;
         yInfo("successfully pushed %s with %s", objName.c_str(), toolName.c_str());
         yDebug("new %s coordinates: 2D %s, 3D %s", objName.c_str(), finPos2D.toString().c_str(), finPos3D.toString().c_str());
     }
@@ -1403,7 +1407,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
             }
 
             robotActions[robotActions.size()-1].outcome = Success;
-            robotActionsSuccessful++;
+            varGood++;
             yInfo("successfully put %s on %s", objName.c_str(), targetName.c_str());
         }
         else
@@ -1583,7 +1587,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         inHandStatus.insert(pair<string, string>(objName.c_str(), handName.c_str()));
 
         robotActions[robotActions.size()-1].outcome = Success;
-        robotActionsSuccessful++;
+        varGood++;
         yInfo("successfully took %s with %s", objName.c_str(), handName.c_str());
     }
     else
