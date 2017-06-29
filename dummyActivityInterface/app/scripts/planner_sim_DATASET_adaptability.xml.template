@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator, Heuristic1 Heuristic2</name>
+<name>Planner Simulator, DATASET, Adaptability</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>

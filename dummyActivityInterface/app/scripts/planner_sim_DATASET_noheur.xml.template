@@ -1,5 +1,5 @@
 <application>
-<name>Planner Simulator, Probabilistic without Heuristics</name>
+<name>Planner Simulator, DATASET, No Heuristics</name>
 
 <dependencies>
     <port>/icub/camcalib/left/out</port>
