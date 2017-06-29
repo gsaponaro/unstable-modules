@@ -63,6 +63,7 @@ bool DummyPraxiconInterfaceModule::updateModule()
         response.addString("hand grasp Bun-top");
         response.addString("Bun-top reach Ham");
         response.addString("hand put Bun-top");
+        response.addString(""); // workaround to ensure that the previous string is correctly parsed
 
         yInfo("sending response: %s", response.toString().c_str());
         speechPort.reply(response);
