@@ -1,0 +1,140 @@
+<application>
+<name>Tool Selection Demo</name>
+
+<dependencies>
+    <port>/icub/camcalib/left/out</port>
+</dependencies>
+
+<module>
+    <name>lbpExtract</name>
+    <node>localhost</node>
+</module>
+<module>
+    <name>blobDescriptor</name>
+    <node>localhost</node>
+</module>
+<module>
+    <name>sequentialLabeller</name>
+    <node>localhost</node>
+</module>
+
+<module>
+    <name>tooldemo</name>
+    <node>localhost</node>
+</module>
+<module>
+    <name>actionsRenderingEngine</name>
+    <parameters>--from configPoeticon.ini</parameters>
+    <node>localhost</node>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <node>localhost</node>
+    <parameters>--name /view/lbp/input --x 0 --y 0 --p 33</parameters>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <parameters>--name /view/lbp/output --x 330 --y 0 --p 33</parameters>
+    <node>localhost</node>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <node>localhost</node>
+    <parameters>--name /view/objectParts --x 660 --y 0 --p 33</parameters>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <parameters>--name /seg --x 0 --y 300 --p 33</parameters>
+    <node>localhost</node>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <parameters>--name /tracker --x 330 --y 300 --out /desiredTrack --p 33</parameters>
+    <node>localhost</node>
+</module>
+
+<module>
+    <name>yarpview</name>
+    <parameters>--name /toolProj --x 0 --y 600 --p 50</parameters>
+    <node>localhost</node>
+</module>
+
+<connection>
+    <from external="true">/icub/camcalib/left/out</from>
+    <to>/lbpExtract/image:i</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/lbpExtract/propagated:o</from>
+    <to>/view/lbp/input</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/lbpExtract/image:o</from>
+    <to>/view/lbp/output</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/lbpExtract/image:o</from>
+    <to>/sequentialLabeller/binImg:i</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/lbpExtract/image:o</from>
+    <to>/blobDescriptor/binImg:i</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/icub/camcalib/left/out</from>
+    <to>/blobDescriptor/rawImg:i</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/sequentialLabeller/labeledImg:o</from>
+    <to>/blobDescriptor/labeledImg:i</to>
+    <protocol>udp</protocol>
+</connection>
+<connection>
+    <from>/blobDescriptor/viewImg:o</from>
+    <to>/view/objectParts</to>
+    <protocol>udp</protocol>
+</connection>
+
+<connection>
+    <from>/blobDescriptor/affDescriptor:o</from>     
+    <to>/tooldemo/fullObjDesc:i</to>
+    <protocol>udp</protocol>
+</connection>
+
+<connection>
+    <from>/blobDescriptor/toolAffDescriptor:o</from>
+    <to>/tooldemo/partsObjDesc:i</to>
+    <protocol>udp</protocol>
+</connection>
+
+<!--
+<connection>
+    <from>/tooldemo/are:rpc</from>
+    <to>/actionsRenderingEngine/cmd:io</to>
+    <protocol>tcp</protocol>
+</connection>
+-->
+
+<connection>
+    <from>/tooldemo/affPred:o</from>
+    <to>/Eprediction/read:i</to>
+    <protocol>tcp</protocol>
+</connection>
+
+<connection>
+    <from>/Eprediction/write:o</from>
+    <to>/tooldemo/affPred:i</to>
+    <protocol>tcp</protocol>
+</connection>
+
+</application>
