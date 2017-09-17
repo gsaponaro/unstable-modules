@@ -7,6 +7,7 @@
 
 <module>
     <name>lbpExtract</name>
+    <parameters>--radius 7 --maxArea 6000 --maxArcLength 600</parameters>
     <node>localhost</node>
 </module>
 <module>
@@ -22,6 +23,7 @@
     <name>tooldemo</name>
     <node>localhost</node>
 </module>
+
 <module>
     <name>actionsRenderingEngine</name>
     <parameters>--from configPoeticon.ini</parameters>
@@ -33,39 +35,19 @@
     <node>localhost</node>
     <parameters>--name /view/lbp/input --x 0 --y 0 --p 33</parameters>
 </module>
-
 <module>
     <name>yarpview</name>
     <parameters>--name /view/lbp/output --x 330 --y 0 --p 33</parameters>
     <node>localhost</node>
 </module>
-
 <module>
     <name>yarpview</name>
     <node>localhost</node>
     <parameters>--name /view/objectParts --x 660 --y 0 --p 33</parameters>
 </module>
 
-<module>
-    <name>yarpview</name>
-    <parameters>--name /seg --x 0 --y 300 --p 33</parameters>
-    <node>localhost</node>
-</module>
-
-<module>
-    <name>yarpview</name>
-    <parameters>--name /tracker --x 330 --y 300 --out /desiredTrack --p 33</parameters>
-    <node>localhost</node>
-</module>
-
-<module>
-    <name>yarpview</name>
-    <parameters>--name /toolProj --x 0 --y 600 --p 50</parameters>
-    <node>localhost</node>
-</module>
-
 <connection>
-    <from external="true">/icub/camcalib/left/out</from>
+    <from>/icub/camcalib/left/out</from>
     <to>/lbpExtract/image:i</to>
     <protocol>udp</protocol>
 </connection>
@@ -75,17 +57,24 @@
     <protocol>udp</protocol>
 </connection>
 <connection>
-    <from>/lbpExtract/image:o</from>
+    <from>/lbpExtract/extractedlbp:o</from>
     <to>/view/lbp/output</to>
     <protocol>udp</protocol>
 </connection>
+
 <connection>
-    <from>/lbpExtract/image:o</from>
+    <from>/lbpExtract/extractedlbp:o</from>
+    <to>/sequentialLabeller/binImg:i</to>
+    <protocol>udp</protocol>
+</connection>
+
+<connection>
+    <from>/lbpExtract/extractedlbp:o</from>
     <to>/sequentialLabeller/binImg:i</to>
     <protocol>udp</protocol>
 </connection>
 <connection>
-    <from>/lbpExtract/image:o</from>
+    <from>/lbpExtract/extractedlbp:o</from>
     <to>/blobDescriptor/binImg:i</to>
     <protocol>udp</protocol>
 </connection>
@@ -106,7 +95,7 @@
 </connection>
 
 <connection>
-    <from>/blobDescriptor/affDescriptor:o</from>     
+    <from>/blobDescriptor/affDescriptor:o</from>
     <to>/tooldemo/fullObjDesc:i</to>
     <protocol>udp</protocol>
 </connection>
