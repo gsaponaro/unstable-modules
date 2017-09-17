@@ -160,20 +160,28 @@ bool ToolDemoModule::select()
         query.addDouble(tool_ecce);
         query.addDouble(tool_comp);
         query.addDouble(tool_circ);
-        //query.addDouble(tool_squa); // use...
-        query.addDouble(tool_elon); // ...only one
+        query.addDouble(tool_squa); // use...
+        //query.addDouble(tool_elon); // ...only one
 
         query.addDouble(obj_conv);
         query.addDouble(obj_ecce);
         query.addDouble(obj_comp);
         query.addDouble(obj_circ);
-        //query.addDouble(obj_squa); // use...
-        query.addDouble(obj_elon); // ...only one
+        query.addDouble(obj_squa); // use...
+        //query.addDouble(obj_elon); // ...only one
 
         query.addDouble(action);
 
         yInfo("sending query: %s", query.toString().c_str());
         affPredictionsOutPort.write(query);
+
+        bool got = false;
+        while (!got)
+        {
+            got = affPredictionsInPort.read(queryResponse);
+        }
+
+        yarp::os::Time::delay(0.5);
     }
 
     return true;
