@@ -1,7 +1,7 @@
 # Copyright: (C) 2012-2015 POETICON++, European Commission FP7 project ICT-288382
-# Copyright: (C) 2016 VisLab, Institute for Systems and Robotics,
+# Copyright: (C) 2017 VisLab, Institute for Systems and Robotics,
 #                Instituto Superior Técnico, Universidade de Lisboa, Lisbon, Portugal
-# Authors: Giovanni Saponaro <gsaponaro@isr.ist.utl.pt>
+# Authors: Giovanni Saponaro <gsaponaro@isr.tecnico.ulisboa.pt>
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 # Based on activityInterface by Vadim Tikhanoff
@@ -36,7 +36,5 @@ include_directories(${PROJECT_SOURCE_DIR}/include
 add_executable(${PROJECT_NAME} ${source} ${header} ${PROJECT_NAME}.thrift ${IDL_GEN_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
-
-add_subdirectory(app)
 
 yarp_install(TARGETS ${PROJECT_NAME} DESTINATION bin)
