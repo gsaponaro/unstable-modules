@@ -1,5 +1,8 @@
-# Gedit backup files
+# Linux temp files
 *~
+
+# backup files
+*.bak
 
 # Build products
 /build*/
