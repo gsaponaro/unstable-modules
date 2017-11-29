@@ -19,6 +19,15 @@ using namespace yarp::os;
 
 bool DummyActivityInterfaceModule::configure(ResourceFinder &rf)
 {
+    // quit if the ini file is not found
+    const string configFile = rf.find("from").asString();
+    string configFileFullPath = rf.findFile(configFile.c_str());
+    if (configFileFullPath == "")
+    {
+        yError("config file %s not found, quitting", configFile.c_str());
+        return false;
+    }
+
     // module parameters
     moduleName = rf.check("name", Value("activityInterface")).asString();
     setName(moduleName.c_str());

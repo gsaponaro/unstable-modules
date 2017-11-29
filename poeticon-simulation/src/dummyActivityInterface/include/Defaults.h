@@ -11,6 +11,9 @@
 
 #include <string>
 
+const std::string DefContext    = "poeticon";
+const std::string DefConfigFile = "dummyActivityInterface.ini";
+
 const int         DefThreadPeriod = 33; // [ms]
 const std::string DefModuleName   = "activityInterface";
 

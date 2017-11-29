@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
 
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("poeticon");    // overridden by --context
-    rf.setDefaultConfigFile("dummyActivityInterface.ini");  // overridden by --from
+    rf.setDefaultContext(DefContext.c_str());    // overridden by --context
+    rf.setDefaultConfigFile(DefConfigFile.c_str());  // overridden by --from
     rf.configure(argc, argv);
 
     if(rf.check("help"))
@@ -33,10 +33,12 @@ int main(int argc, char *argv[])
         const double UpperBound = 1.0;
 
         yInfo("Basic options:");
+        yInfo("--context <context directory name> (default %s)", DefContext.c_str());
+        yInfo("--from <ini file name> (default %s)", DefConfigFile.c_str());
         yInfo("--name <port prefix> (default %s)", DefModuleName.c_str());
         yInfo("--period <milliseconds> (default %d)", DefThreadPeriod);
         yInfo(" ");
-        yInfo("Noise options (the probability of success ranges from %f to %f", LowerBound, UpperBound);
+        yInfo("Noise options (the probability of success ranges from %f to %f)", LowerBound, UpperBound);
         yInfo("--probability_grasp_tool_left <probability> (default: %f)", DefProbabilityGraspToolLeft);
         yInfo("--probability_grasp_tool_right <probability> (default: %f)", DefProbabilityGraspToolRight);
         yInfo("--probability_perceive_grasp <probability> (default: %f)", DefProbabilityPerceiveGrasp);
