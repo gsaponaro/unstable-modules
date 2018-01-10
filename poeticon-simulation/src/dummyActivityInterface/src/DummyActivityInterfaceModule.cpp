@@ -185,6 +185,11 @@ Bottle DummyActivityInterfaceModule::reachableWith(const string &objName)
     return thread->reachableWith(objName);
 }
 
+string DummyActivityInterfaceModule::simulate()
+{
+    return thread->simulate();
+}
+
 bool DummyActivityInterfaceModule::take(const string &objName, const string &handName)
 {
     return thread->take(objName, handName);

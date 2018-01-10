@@ -57,6 +57,7 @@ class DummyActivityInterfaceModule : public yarp::os::RFModule,
         bool push(const std::string &objName, const std::string &toolName);
         bool put(const std::string &objName, const std::string &targetName);
         yarp::os::Bottle reachableWith(const std::string &objName);
+        std::string simulate();
         bool take(const std::string &objName, const std::string &handName);
         yarp::os::Bottle underOf(const std::string &objName);
         bool quit();

@@ -136,6 +136,12 @@ service DummyActivityInterface_IDL
   Bottle reachableWith(1:string objName);
 
   /**
+   * Run simulated experiment once
+   * @return string containing the result of the experiment
+   **/
+  string simulate();
+
+  /**
   * Perform the take action on the particular object with the particular hand
   * @param objName specifies the name of the object in question
   * @param handName specifies the name of the hand in question

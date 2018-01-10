@@ -90,6 +90,7 @@ bool DummyActivityInterfaceThread::threadInit()
     onTopElements.clear();
     elements = 0;
 
+    finishedSim = false;
     resetActionCounters(false);
     varSuccess = -1;
 
@@ -388,6 +389,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
             yInfo("I successfully made a %s sandwich", objectsUsed.toString().c_str());
+            finishedSim = true;
             varSuccess = 1;
 
             // print statistics on screen
@@ -411,6 +413,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
             }
             yDebug("%s", toSay.c_str());
 
+            finishedSim = true;
             varSuccess = 0;
 
             // print statistics on screen
@@ -1523,8 +1526,36 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 }
 
 /**********************************************************/
+string DummyActivityInterfaceThread::simulate()
+{
+    askPraxicon("make a sandwich");
+
+    while (!finishedSim)
+        yarp::os::Time::delay(0.1);
+
+    // start formatting result
+    std::stringstream result;
+    result << "ex(";
+
+    // add #good,#total information
+    result << varGood;
+    result << ",";
+    result << robotActions.size();
+
+    // add failure flag if necessary
+    if (varSuccess != 1)
+        result << ",fail";
+
+    // finish formatting result
+    result << ")";
+
+    return result.str();
+}
+
+/**********************************************************/
 bool DummyActivityInterfaceThread::take(const string &objName, const string &handName)
 {
+    yDebug() << "received: take" << objName.c_str() << handName.c_str();
     string action = string(__func__) + " " + objName.c_str() + " " + handName.c_str();
     yDebug("motor action requested: %s", action.c_str());
 

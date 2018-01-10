@@ -15,6 +15,7 @@
 #include <cstring> // strcmp
 #include <iostream> // __func__
 #include <map>
+#include <sstream>
 #include <string>
 
 #include <yarp/os/Bottle.h>
@@ -78,6 +79,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::string praxiconRequest;
         yarp::os::Bottle listOfGoals;
 
+        bool finishedSim;
         std::vector<RobotAction> robotActions;
         int varGood;
         int varSuccess;
@@ -125,6 +127,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         bool push(const std::string &objName, const std::string &toolName);
         bool put(const std::string &objName, const std::string &targetName);
         yarp::os::Bottle reachableWith(const std::string &objName);
+        std::string simulate();
         bool take(const std::string &objName, const std::string &handName);
         yarp::os::Bottle underOf(const std::string &objName);
 };
