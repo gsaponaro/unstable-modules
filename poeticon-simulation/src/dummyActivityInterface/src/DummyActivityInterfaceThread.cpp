@@ -90,7 +90,7 @@ bool DummyActivityInterfaceThread::threadInit()
     onTopElements.clear();
     elements = 0;
 
-    finishedSim = false;
+    // finishedSim = false;
     resetActionCounters(false);
     varSuccess = -1;
 
@@ -389,7 +389,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
                     objectsUsed.addString(status.get(i).asString().c_str());
             }
             yInfo("I successfully made a %s sandwich", objectsUsed.toString().c_str());
-            finishedSim = true;
+            // finishedSim = true;
             varSuccess = 1;
 
             // print statistics on screen
@@ -413,7 +413,7 @@ bool DummyActivityInterfaceThread::processPradaStatus(const yarp::os::Bottle &st
             }
             yDebug("%s", toSay.c_str());
 
-            finishedSim = true;
+            // finishedSim = true;
             varSuccess = 0;
 
             // print statistics on screen
@@ -1528,9 +1528,15 @@ Bottle DummyActivityInterfaceThread::reachableWith(const string &objName)
 /**********************************************************/
 string DummyActivityInterfaceThread::simulate()
 {
+    if (!isConnectedOutput(rpcPraxiconInterface) || !isConnectedOutput(rpcPrada))
+    {
+        return "error with connections";
+    }
+
     askPraxicon("make a sandwich");
 
-    while (!finishedSim)
+    // while (!finishedSim)
+    while (varSuccess == -1) // while experiment is not finished
         yarp::os::Time::delay(0.1);
 
     // start formatting result
@@ -1543,7 +1549,7 @@ string DummyActivityInterfaceThread::simulate()
     result << robotActions.size();
 
     // add failure flag if necessary
-    if (varSuccess != 1)
+    if (varSuccess == 0)
         result << ",fail";
 
     // finish formatting result

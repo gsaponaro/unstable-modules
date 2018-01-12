@@ -79,7 +79,7 @@ class DummyActivityInterfaceThread : public yarp::os::RateThread
         std::string praxiconRequest;
         yarp::os::Bottle listOfGoals;
 
-        bool finishedSim;
+        // bool finishedSim;
         std::vector<RobotAction> robotActions;
         int varGood;
         int varSuccess;
