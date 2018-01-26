@@ -1551,6 +1551,19 @@ string DummyActivityInterfaceThread::simulate()
     // finish formatting result
     result << ")";
 
+    // construct string from vector<RobotAction>
+    std::stringstream ra;
+    for (std::vector<RobotAction>::const_iterator i = robotActions.begin();
+         i != robotActions.end();
+         ++i)
+    {
+        ra << i->action.c_str() << '=' << i->outcome.c_str()  << ';';
+    }
+
+    // add string of robot actions to result
+    result << " ";
+    result << ra.str();
+
     return result.str();
 }
 
