@@ -665,7 +665,7 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to grasp the tool %s with the %s hand because noise > threshold (%f > %f)",
+        yWarning("I have failed to grasp the tool %s with the %s hand because random number > noise level (%f > %f)",
                  label.c_str(), handName.c_str(),
                  noise, probability_grasp_tool);
     }
@@ -1214,7 +1214,7 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to pull %s with %s because noise > threshold (%f > %f)",
+        yWarning("I have failed to pull %s with %s because random number > noise level (%f > %f)",
                  objName.c_str(), toolName.c_str(),
                  noise, probability_pull);
     }
@@ -1301,7 +1301,7 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to push %s with %s because noise > threshold (%f > %f)",
+        yWarning("I have failed to push %s with %s because random number > noise level (%f > %f)",
                  objName.c_str(), toolName.c_str(),
                  noise, probability_push);
     }
@@ -1413,7 +1413,7 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         else
         {
             robotActions[robotActions.size()-1].outcome = Failure;
-            yWarning("I have failed to put %s on %s with the %s hand because noise > threshold (%f > %f)",
+            yWarning("I have failed to put %s on %s with the %s hand because random number > noise level (%f > %f)",
                      objName.c_str(), targetName.c_str(), handName.c_str(),
                      noise, probability_put);
         }
@@ -1639,7 +1639,7 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to take %s with %s because noise > threshold (%f > %f)",
+        yWarning("I have failed to take %s with %s because random number > noise level (%f > %f)",
                  objName.c_str(), handName.c_str(),
                  noise, probability_take);
     }
