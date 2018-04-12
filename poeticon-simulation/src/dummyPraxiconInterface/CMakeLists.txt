@@ -19,16 +19,12 @@ include(ICUBcontribHelpers)
 include(ICUBcontribOptions)
 icubcontrib_set_default_prefix()
 
-file(GLOB source src/*.cpp)
-file(GLOB header include/*.h)
-
-source_group("Source Files" FILES ${source})
-source_group("Header Files" FILES ${header})
-
 include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} ${source} ${header})
+add_executable(${PROJECT_NAME} include/DummyPraxiconInterfaceModule.h
+                               src/DummyPraxiconInterfaceMain.cpp
+                               src/DummyPraxiconInterfaceModule.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
