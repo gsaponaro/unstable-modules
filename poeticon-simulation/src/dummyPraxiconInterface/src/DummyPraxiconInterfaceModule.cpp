@@ -55,7 +55,7 @@ bool DummyPraxiconInterfaceModule::updateModule()
     {
         yInfo("received message: %s", speech.toString().c_str());
 
-        // response to simple3 and complex6 scenarios:
+        // hardcoded response for the simple3 and complex6 scenarios:
         // ((hand grasp Ham) (Ham reach Bun-bottom) (hand put Ham) (hand grasp Bun-top) (Bun-top reach Ham) (hand put Bun-top))
         response.addString("hand grasp Ham");
         response.addString("Ham reach Bun-bottom");
