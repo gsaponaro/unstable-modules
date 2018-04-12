@@ -33,7 +33,6 @@ add_executable(${PROJECT_NAME} include/Defaults.h
                                src/DummyActivityInterfaceMain.cpp
                                src/DummyActivityInterfaceModule.cpp
                                src/DummyActivityInterfaceThread.cpp
-                               ${PROJECT_NAME}.thrift
                                ${IDL_GEN_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
