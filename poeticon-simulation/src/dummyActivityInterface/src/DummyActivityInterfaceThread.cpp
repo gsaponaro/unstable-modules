@@ -636,8 +636,8 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     yInfo("Trying to grab the tool %s with the help of the human", label.c_str());
 
     // grasp the tool with the help of the human, probabilistically
-    const double noise = yarp::math::Rand::scalar();
-    bool success = (noise <= probability_grasp_tool);
+    const double rand_num = yarp::math::Rand::scalar();
+    bool success = (rand_num <= probability_grasp_tool);
     if (success)
     {
         //update inHandStatus map
@@ -665,9 +665,9 @@ bool DummyActivityInterfaceThread::askForTool(const string &handName,
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to grasp the tool %s with the %s hand because random number > noise level (%f > %f)",
+        yWarning("I have failed to grasp the tool %s with the %s hand because random number > reliability level (%f > %f)",
                  label.c_str(), handName.c_str(),
-                 noise, probability_grasp_tool);
+                 rand_num, probability_grasp_tool);
     }
 
     delayAfterMotor();
@@ -1183,8 +1183,8 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
         return false;
 
     // do the pull action probabilistically
-    const double noise = yarp::math::Rand::scalar();
-    bool success = (noise <= probability_pull);
+    const double rand_num = yarp::math::Rand::scalar();
+    bool success = (rand_num <= probability_pull);
     if (success)
     {
         Bottle initPos2D = get2D(objName);
@@ -1214,9 +1214,9 @@ bool DummyActivityInterfaceThread::pull(const string &objName, const string &too
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to pull %s with %s because random number > noise level (%f > %f)",
+        yWarning("I have failed to pull %s with %s because random number > reliability level (%f > %f)",
                  objName.c_str(), toolName.c_str(),
-                 noise, probability_pull);
+                 rand_num, probability_pull);
     }
 
     delayAfterMotor();
@@ -1270,8 +1270,8 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
         return false;
 
     // do the push action probabilistically
-    const double noise = yarp::math::Rand::scalar();
-    bool success = (noise <= probability_push);
+    const double rand_num = yarp::math::Rand::scalar();
+    bool success = (rand_num <= probability_push);
     if (success)
     {
         Bottle initPos2D = get2D(objName);
@@ -1301,9 +1301,9 @@ bool DummyActivityInterfaceThread::push(const string &objName, const string &too
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to push %s with %s because random number > noise level (%f > %f)",
+        yWarning("I have failed to push %s with %s because random number > reliability level (%f > %f)",
                  objName.c_str(), toolName.c_str(),
-                 noise, probability_push);
+                 rand_num, probability_push);
     }
 
     delayAfterMotor();
@@ -1369,8 +1369,8 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         Bottle under = underOf(targetName.c_str());
 
         // do the put action probabilistically
-        const double noise = yarp::math::Rand::scalar();
-        success = (noise <= probability_put);
+        const double rand_num = yarp::math::Rand::scalar();
+        success = (rand_num <= probability_put);
         if (success)
         {
             // update objName coordinates
@@ -1413,9 +1413,9 @@ bool DummyActivityInterfaceThread::put(const string &objName, const string &targ
         else
         {
             robotActions[robotActions.size()-1].outcome = Failure;
-            yWarning("I have failed to put %s on %s with the %s hand because random number > noise level (%f > %f)",
+            yWarning("I have failed to put %s on %s with the %s hand because random number > reliability level (%f > %f)",
                      objName.c_str(), targetName.c_str(), handName.c_str(),
-                     noise, probability_put);
+                     rand_num, probability_put);
         }
     }
 
@@ -1611,8 +1611,8 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
         (handName=="left" ? probability_take_left : probability_take_right);
 
     // do the take action probabilistically
-    const double noise = yarp::math::Rand::scalar();
-    bool success = (noise <= probability_take);
+    const double rand_num = yarp::math::Rand::scalar();
+    bool success = (rand_num <= probability_take);
     if (success)
     {
         // if classifyObserve
@@ -1639,9 +1639,9 @@ bool DummyActivityInterfaceThread::take(const string &objName, const string &han
     else
     {
         robotActions[robotActions.size()-1].outcome = Failure;
-        yWarning("I have failed to take %s with %s because random number > noise level (%f > %f)",
+        yWarning("I have failed to take %s with %s because random number > reliability level (%f > %f)",
                  objName.c_str(), handName.c_str(),
-                 noise, probability_take);
+                 rand_num, probability_take);
     }
 
     delayAfterMotor();
